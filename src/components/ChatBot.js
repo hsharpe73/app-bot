@@ -53,9 +53,9 @@ const ChatBot = () => {
         ? raw
         : 'Sin respuesta del asistente';
 
-      // Formatear CLP
-      respuesta = respuesta.replace(/\$(\d+(?:[.,]\d+)?)/g, (_, num) => {
-        const limpio = num.replace(',', '.');
+      // 🔄 Formatear montos CLP con puntos de miles correctamente
+      respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
+        const limpio = match.replace(/\./g, '').replace('$', '');
         return `<strong>${formatCLP(limpio)}</strong>`;
       });
 
