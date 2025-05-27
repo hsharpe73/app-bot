@@ -13,12 +13,15 @@ import axios from 'axios';
 
 const WEBHOOK_URL = 'https://sharpe-asistente.app.n8n.cloud/webhook/consulta-ventas-v3';
 
-// Formateador CLP con puntos
+// Formateador CLP sin decimales y con puntos como separador de miles
 const formatCLP = (num) => {
-  const parsed = Number(num);
-  return isNaN(parsed)
-    ? num
-    : new Intl.NumberFormat('es-CL').format(parsed);
+  const parsed = parseFloat(num);
+  if (isNaN(parsed)) return num;
+
+  return new Intl.NumberFormat('es-CL', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(parsed);
 };
 
 const ChatBot = () => {
@@ -48,7 +51,7 @@ const ChatBot = () => {
         ? raw
         : 'Sin respuesta del asistente';
 
-      // Reemplazar $1234567.0 por $1.234.567
+      // Reemplazar $1234567.0 o $1234567.00 por $1.234.567
       respuesta = respuesta.replace(/\$(\d+(?:\.\d+)?)/g, (_, num) => `$${formatCLP(num)}`);
 
       console.log('📌 Respuesta recibida:', respuesta);
