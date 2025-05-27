@@ -19,6 +19,8 @@ const formatCLP = (num) => {
   if (isNaN(parsed)) return num;
 
   return new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(parsed);
@@ -51,8 +53,14 @@ const ChatBot = () => {
         ? raw
         : 'Sin respuesta del asistente';
 
-      // Reemplazar $1234567.0 o $1234567.00 por $1.234.567
-      respuesta = respuesta.replace(/\$(\d+(?:\.\d+)?)/g, (_, num) => `$${formatCLP(num)}`);
+      // Formatear CLP
+      respuesta = respuesta.replace(/\$(\d+(?:[.,]\d+)?)/g, (_, num) => {
+        const limpio = num.replace(',', '.');
+        return `<strong>${formatCLP(limpio)}</strong>`;
+      });
+
+      // Formatear porcentajes en negrita
+      respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
 
       console.log('📌 Respuesta recibida:', respuesta);
 
@@ -141,7 +149,10 @@ const ChatBot = () => {
                   <Typography variant="body2" fontWeight="bold">
                     {msg.sender === 'user' ? 'Tú' : 'Asistente'}
                   </Typography>
-                  <Typography variant="body2">{msg.text}</Typography>
+                  <Typography
+                    variant="body2"
+                    dangerouslySetInnerHTML={{ __html: msg.text }}
+                  />
                 </Box>
               </Slide>
             ))}
