@@ -23,27 +23,30 @@ const ChatBot = () => {
 
     const newMsg = { sender: 'user', text: input };
     setMessages((prev) => [...prev, newMsg]);
+    console.log('📤 Enviando al webhook:', input);
     setInput('');
     setLoading(true);
 
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
 
-      const rawResponse = res.data?.respuesta;
+      console.log('📥 Respuesta completa:', res);
+      console.log('🧾 Tipo de res.data:', typeof res.data);
+      console.log('📄 Contenido crudo:', res.data);
 
-      // Convertir respuesta a string de forma segura
-      const mensaje =
-        typeof rawResponse === 'string'
-          ? rawResponse
-          : typeof rawResponse === 'object'
-          ? JSON.stringify(rawResponse)
-          : '⚠️ Respuesta no válida del asistente';
+      const raw = res.data;
 
-      const finalMsg = mensaje.toLowerCase().includes('no hay datos disponibles')
+      const respuesta = typeof raw === 'object' && raw.respuesta
+        ? String(raw.respuesta)
+        : 'Sin respuesta del asistente';
+
+      console.log('📌 Respuesta recibida:', respuesta);
+
+      const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
         ? '⚠️ No se encontró información para esa factura.'
-        : mensaje;
+        : respuesta;
 
-      setMessages((prev) => [...prev, { sender: 'bot', text: finalMsg }]);
+      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
     } catch (err) {
       console.error('❌ Error al conectar con el webhook:', err);
       setMessages((prev) => [
