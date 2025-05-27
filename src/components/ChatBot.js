@@ -33,13 +33,13 @@ const ChatBot = () => {
       console.log('🧾 Tipo de res.data:', typeof res.data);
       console.log('📄 Contenido crudo:', res.data);
 
-      
       const respuesta = res.data?.respuesta || 'Sin respuesta del asistente';
       console.log('📌 Respuesta recibida:', respuesta);
 
-      const mensaje = respuesta?.toLowerCase().includes('no hay datos disponibles')
-        ? '⚠️ No se encontró información para esa factura.'
-        : respuesta;
+      const mensaje =
+        String(respuesta || '').toLowerCase().includes('no hay datos disponibles')
+          ? '⚠️ No se encontró información para esa factura.'
+          : String(respuesta || '');
 
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
     } catch (err) {
