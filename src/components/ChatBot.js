@@ -34,10 +34,8 @@ const ChatBot = () => {
       console.log('🧾 Tipo de res.data:', typeof res.data);
       console.log('📄 Contenido crudo:', res.data);
 
-      const raw = res.data;
-
-      const respuesta = typeof raw === 'object' && raw.respuesta
-        ? String(raw.respuesta)
+      const respuesta = typeof res.data === 'string' && res.data.trim() !== ''
+        ? res.data
         : 'Sin respuesta del asistente';
 
       console.log('📌 Respuesta recibida:', respuesta);
