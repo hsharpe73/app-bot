@@ -17,8 +17,9 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
 import axios from 'axios';
+import Lottie from 'lottie-react';
+import botAnimation from '../assets/bot.json';
 
 const WEBHOOK_URL = 'https://sharpe-asistente.app.n8n.cloud/webhook/consulta-ventas-v3';
 
@@ -41,13 +42,16 @@ const ChatBot = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  const speak = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'es-CL';
+    speechSynthesis.speak(utterance);
+  };
+
   useEffect(() => {
-    setMessages([
-      {
-        sender: 'bot',
-        text: '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy? 🧾',
-      },
-    ]);
+    const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
+    setMessages([{ sender: 'bot', text: welcome }]);
+    speak(welcome);
   }, []);
 
   const handleSend = async () => {
@@ -76,23 +80,20 @@ const ChatBot = () => {
         : respuesta;
 
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+      speak(mensaje.replace(/<[^>]*>?/gm, ''));
     } catch (err) {
-      setMessages((prev) => [
-        ...prev,
-        { sender: 'bot', text: '⚠️ Error al conectar con el asistente' },
-      ]);
+      const errorMsg = '⚠️ Error al conectar con el asistente';
+      setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
+      speak(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleClear = () => {
-    setMessages([
-      {
-        sender: 'bot',
-        text: '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy? 🧾',
-      },
-    ]);
+    const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
+    setMessages([{ sender: 'bot', text: welcome }]);
+    speak(welcome);
   };
 
   return (
@@ -119,10 +120,10 @@ const ChatBot = () => {
         }}
       >
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Avatar sx={{ bgcolor: '#ff7043' }}>
-              <SmartToyIcon />
-            </Avatar>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Box sx={{ width: 50 }}>
+              <Lottie animationData={botAnimation} loop={true} />
+            </Box>
             <Typography
               variant="h6"
               fontWeight="bold"
