@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   TextField,
@@ -11,13 +11,16 @@ import {
   IconButton,
   Divider,
   Tooltip,
+  Avatar,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import axios from 'axios';
 
 const WEBHOOK_URL = 'https://sharpe-asistente.app.n8n.cloud/webhook/consulta-ventas-v3';
-
 
 const formatCLP = (num) => {
   const parsed = parseFloat(num);
@@ -34,6 +37,18 @@ const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+  useEffect(() => {
+    setMessages([
+      {
+        sender: 'bot',
+        text: '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy? 🧾',
+      },
+    ]);
+  }, []);
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -72,14 +87,19 @@ const ChatBot = () => {
   };
 
   const handleClear = () => {
-    setMessages([]);
+    setMessages([
+      {
+        sender: 'bot',
+        text: '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy? 🧾',
+      },
+    ]);
   };
 
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)',
+        background: 'linear-gradient(to right, #e0c3fc, #8ec5fc)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -87,24 +107,30 @@ const ChatBot = () => {
       }}
     >
       <Paper
-        elevation={8}
+        elevation={10}
         sx={{
           width: '100%',
           maxWidth: 700,
           borderRadius: 4,
           p: 3,
-          backgroundColor: '#fff',
-          backdropFilter: 'blur(6px)',
+          backgroundColor: 'rgba(255, 255, 255, 0.7)',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
         }}
       >
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography
-            variant="h5"
-            fontWeight="bold"
-            sx={{ color: '#ff5722' }}
-          >
-            💬 Asistente de Ventas
-          </Typography>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Avatar sx={{ bgcolor: '#ff7043' }}>
+              <SmartToyIcon />
+            </Avatar>
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              sx={{ color: '#ff5722' }}
+            >
+              Asistente de Ventas
+            </Typography>
+          </Stack>
           <Tooltip title="Limpiar conversación">
             <IconButton color="error" onClick={handleClear}>
               <DeleteSweepIcon />
@@ -116,12 +142,12 @@ const ChatBot = () => {
 
         <Box
           sx={{
-            height: 450,
+            height: isMobile ? 350 : 450,
             overflowY: 'auto',
             border: '2px solid #ffe0b2',
             borderRadius: 3,
             p: 2,
-            backgroundColor: '#fefefe',
+            backgroundColor: '#ffffffdd',
           }}
         >
           <Stack spacing={2}>
@@ -140,9 +166,9 @@ const ChatBot = () => {
                     backgroundColor: msg.sender === 'user' ? '#ff7043' : '#26c6da',
                     color: '#fff',
                     px: 2,
-                    py: 1,
+                    py: 1.5,
                     borderRadius: 2,
-                    maxWidth: '80%',
+                    maxWidth: '85%',
                     boxShadow: 3,
                   }}
                 >
@@ -185,7 +211,11 @@ const ChatBot = () => {
             onClick={handleSend}
             sx={{
               backgroundColor: '#ff5722',
-              '&:hover': { backgroundColor: '#e64a19' },
+              '&:hover': {
+                backgroundColor: '#e64a19',
+                transform: 'scale(1.05)',
+                transition: 'all 0.2s ease-in-out',
+              },
               minWidth: 110,
             }}
           >
