@@ -42,8 +42,27 @@ const ChatBot = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+  // Forzar carga de voces
+  useEffect(() => {
+    speechSynthesis.getVoices();
+  }, []);
+
+  const getSpanishVoice = () => {
+    const voices = speechSynthesis.getVoices();
+    return voices.find((voice) =>
+      voice.lang.startsWith('es') &&
+      (voice.name.toLowerCase().includes('google') ||
+        voice.name.toLowerCase().includes('helena') ||
+        voice.name.toLowerCase().includes('microsoft'))
+    );
+  };
+
   const speak = (text) => {
     const utterance = new SpeechSynthesisUtterance(text);
+    const selectedVoice = getSpanishVoice();
+    if (selectedVoice) {
+      utterance.voice = selectedVoice;
+    }
     utterance.lang = 'es-CL';
     speechSynthesis.speak(utterance);
   };
