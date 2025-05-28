@@ -42,7 +42,7 @@ const ChatBot = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  // Forzar carga de voces
+  
   useEffect(() => {
     speechSynthesis.getVoices();
   }, []);
@@ -58,7 +58,12 @@ const ChatBot = () => {
   };
 
   const speak = (text) => {
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleaned = text
+      .replace(/<[^>]*>?/gm, '')
+      .replace(/\$/g, ' pesos')
+      .replace(/\./g, '');
+
+    const utterance = new SpeechSynthesisUtterance(cleaned);
     const selectedVoice = getSpanishVoice();
     if (selectedVoice) {
       utterance.voice = selectedVoice;
@@ -99,7 +104,7 @@ const ChatBot = () => {
         : respuesta;
 
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-      speak(mensaje.replace(/<[^>]*>?/gm, ''));
+      speak(mensaje);
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
