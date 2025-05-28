@@ -8,16 +8,20 @@ import {
   Stack,
   CircularProgress,
   Slide,
+  IconButton,
+  Divider,
+  Tooltip,
 } from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import axios from 'axios';
 
 const WEBHOOK_URL = 'https://sharpe-asistente.app.n8n.cloud/webhook/consulta-ventas-v3';
 
-// Formateador CLP sin decimales y con puntos como separador de miles
+
 const formatCLP = (num) => {
   const parsed = parseFloat(num);
   if (isNaN(parsed)) return num;
-
   return new Intl.NumberFormat('es-CL', {
     style: 'currency',
     currency: 'CLP',
@@ -36,33 +40,21 @@ const ChatBot = () => {
 
     const newMsg = { sender: 'user', text: input };
     setMessages((prev) => [...prev, newMsg]);
-    console.log('📤 Enviando al webhook:', input);
     setInput('');
     setLoading(true);
 
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
-
-      console.log('📥 Respuesta completa:', res);
-      console.log('🧾 Tipo de res.data:', typeof res.data);
-      console.log('📄 Contenido crudo:', res.data);
-
-      const raw = res.data;
-
-      let respuesta = typeof raw === 'string' && raw.trim() !== ''
-        ? raw
+      let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
+        ? res.data
         : 'Sin respuesta del asistente';
 
-      // 🔄 Formatear montos CLP con puntos de miles correctamente
       respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
         const limpio = match.replace(/\./g, '').replace('$', '');
         return `<strong>${formatCLP(limpio)}</strong>`;
       });
 
-      // Formatear porcentajes en negrita
       respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-
-      console.log('📌 Respuesta recibida:', respuesta);
 
       const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
         ? '⚠️ No se encontró información para esa factura.'
@@ -70,7 +62,6 @@ const ChatBot = () => {
 
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
     } catch (err) {
-      console.error('❌ Error al conectar con el webhook:', err);
       setMessages((prev) => [
         ...prev,
         { sender: 'bot', text: '⚠️ Error al conectar con el asistente' },
@@ -80,11 +71,15 @@ const ChatBot = () => {
     }
   };
 
+  const handleClear = () => {
+    setMessages([]);
+  };
+
   return (
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+        background: 'linear-gradient(to right, #ffecd2 0%, #fcb69f 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -92,36 +87,41 @@ const ChatBot = () => {
       }}
     >
       <Paper
-        elevation={6}
+        elevation={8}
         sx={{
           width: '100%',
-          maxWidth: 650,
+          maxWidth: 700,
           borderRadius: 4,
           p: 3,
-          backgroundColor: '#ffffffdd',
-          backdropFilter: 'blur(8px)',
-          boxShadow: '0 12px 24px rgba(0,0,0,0.2)',
+          backgroundColor: '#fff',
+          backdropFilter: 'blur(6px)',
         }}
       >
-        <Typography
-          variant="h5"
-          align="center"
-          fontWeight="bold"
-          gutterBottom
-          sx={{ color: '#ff5722' }}
-        >
-          💬 Asistente Inteligente de Ventas
-        </Typography>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
+          <Typography
+            variant="h5"
+            fontWeight="bold"
+            sx={{ color: '#ff5722' }}
+          >
+            💬 Asistente de Ventas
+          </Typography>
+          <Tooltip title="Limpiar conversación">
+            <IconButton color="error" onClick={handleClear}>
+              <DeleteSweepIcon />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+
+        <Divider sx={{ my: 2 }} />
 
         <Box
           sx={{
             height: 450,
             overflowY: 'auto',
-            backgroundColor: '#f9f9f9',
-            border: '2px solid #ffccbc',
+            border: '2px solid #ffe0b2',
             borderRadius: 3,
             p: 2,
-            mb: 2,
+            backgroundColor: '#fefefe',
           }}
         >
           <Stack spacing={2}>
@@ -132,54 +132,61 @@ const ChatBot = () => {
                 mountOnEnter
                 unmountOnExit
                 key={index}
-                timeout={{ enter: 300 }}
+                timeout={{ enter: 250 }}
               >
                 <Box
                   sx={{
                     alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                    backgroundColor: msg.sender === 'user' ? '#ff7043' : '#4dd0e1',
+                    backgroundColor: msg.sender === 'user' ? '#ff7043' : '#26c6da',
                     color: '#fff',
                     px: 2,
                     py: 1,
                     borderRadius: 2,
-                    maxWidth: '85%',
+                    maxWidth: '80%',
                     boxShadow: 3,
                   }}
                 >
-                  <Typography variant="body2" fontWeight="bold">
+                  <Typography variant="caption" fontWeight="bold">
                     {msg.sender === 'user' ? 'Tú' : 'Asistente'}
                   </Typography>
                   <Typography
                     variant="body2"
+                    component="div"
                     dangerouslySetInnerHTML={{ __html: msg.text }}
                   />
                 </Box>
               </Slide>
             ))}
             {loading && (
-              <Typography variant="body2" color="textSecondary">
-                <CircularProgress size={16} sx={{ mr: 1 }} /> Procesando...
-              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CircularProgress size={16} />
+                <Typography variant="body2" color="textSecondary">
+                  Procesando...
+                </Typography>
+              </Stack>
             )}
           </Stack>
         </Box>
 
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} mt={2}>
           <TextField
             fullWidth
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Escribe tu pregunta aquí..."
+            placeholder="Escribe tu pregunta..."
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             variant="outlined"
-            sx={{ backgroundColor: 'white', borderRadius: 2 }}
+            sx={{ backgroundColor: '#fff', borderRadius: 2 }}
           />
           <Button
             variant="contained"
+            color="primary"
+            endIcon={<SendIcon />}
             onClick={handleSend}
             sx={{
               backgroundColor: '#ff5722',
               '&:hover': { backgroundColor: '#e64a19' },
+              minWidth: 110,
             }}
           >
             Enviar
