@@ -34,6 +34,41 @@ const formatCLP = (num) => {
   }).format(parsed);
 };
 
+// Convertidor de número a texto
+const numeroATexto = (num) => {
+  const unidades = [
+    '', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
+    'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'
+  ];
+  const decenas = [
+    '', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta',
+    'setenta', 'ochenta', 'noventa'
+  ];
+  const centenas = [
+    '', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos',
+    'seiscientos', 'setecientos', 'ochocientos', 'novecientos'
+  ];
+
+  const seccion = (n) => {
+    if (n < 20) return unidades[n];
+    if (n < 100) return decenas[Math.floor(n / 10)] + (n % 10 ? ' y ' + unidades[n % 10] : '');
+    if (n < 1000) return centenas[Math.floor(n / 100)] + (n % 100 ? ' ' + seccion(n % 100) : '');
+    if (n < 1000000) {
+      const miles = Math.floor(n / 1000);
+      const resto = n % 1000;
+      return (miles === 1 ? 'mil' : seccion(miles) + ' mil') + (resto ? ' ' + seccion(resto) : '');
+    }
+    const millones = Math.floor(n / 1000000);
+    const resto = n % 1000000;
+    return (
+      (millones === 1 ? 'un millón' : seccion(millones) + ' millones') +
+      (resto ? ' ' + seccion(resto) : '')
+    );
+  };
+
+  return seccion(num);
+};
+
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -42,7 +77,6 @@ const ChatBot = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  
   useEffect(() => {
     speechSynthesis.getVoices();
   }, []);
@@ -58,10 +92,13 @@ const ChatBot = () => {
   };
 
   const speak = (text) => {
-    const cleaned = text
-      .replace(/<[^>]*>?/gm, '')
-      .replace(/\$/g, ' pesos')
-      .replace(/\./g, '');
+    let cleaned = text.replace(/<[^>]*>?/gm, '');
+
+    // Detectar montos como $236.295.738 y convertir a texto
+    cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
+      const numeric = parseInt(rawNumber.replace(/\./g, ''));
+      return `${numeroATexto(numeric)} pesos`;
+    });
 
     const utterance = new SpeechSynthesisUtterance(cleaned);
     const selectedVoice = getSpanishVoice();
