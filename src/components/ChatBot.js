@@ -20,7 +20,6 @@ import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
-import ChartRenderer from '../components/ChartRenderer';
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
@@ -125,7 +124,6 @@ const ChatBot = () => {
         const mensajeBot = {
           sender: 'bot',
           text: respuestaFormateada,
-          chart: res.data.grafico || null,
         };
 
         setMessages((prev) => [...prev, mensajeBot]);
@@ -192,7 +190,6 @@ const ChatBot = () => {
                 <Box sx={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: msg.sender === 'user' ? '#ff7043' : '#26c6da', color: '#fff', px: 2, py: 1.5, borderRadius: 2, maxWidth: '85%', boxShadow: 3 }}>
                   <Typography variant="caption" fontWeight="bold">{msg.sender === 'user' ? 'Tú' : 'Asistente'}</Typography>
                   <Typography variant="body2" component="div" dangerouslySetInnerHTML={{ __html: msg.text }} />
-                  {msg.chart && <ChartRenderer tipo={msg.chart.tipo} datos={msg.chart.datos} />}
                 </Box>
               </Slide>
             ))}
