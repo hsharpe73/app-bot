@@ -113,8 +113,15 @@ const ChatBot = () => {
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
 
-      if (typeof res.data === 'object' && res.data !== null) {
-        const mensaje = res.data.respuesta || 'Sin respuesta del asistente';
+      let mensaje = '⚠️ Respuesta no válida del asistente';
+      let mensajeBot = null;
+
+      if (typeof res.data === 'string') {
+        mensaje = res.data;
+        mensajeBot = { sender: 'bot', text: mensaje };
+      } else if (typeof res.data === 'object' && res.data !== null) {
+        mensaje = res.data.respuesta || 'Sin respuesta del asistente';
+
         const respuestaFormateada = mensaje
           .replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
             const limpio = match.replace(/\./g, '').replace('$', '');
@@ -122,19 +129,21 @@ const ChatBot = () => {
           })
           .replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
 
-        const mensajeBot = {
+        mensajeBot = {
           sender: 'bot',
           text: respuestaFormateada,
           chart: res.data.grafico || null,
         };
+      }
 
+      if (mensajeBot) {
         setMessages((prev) => [...prev, mensajeBot]);
         speak(mensaje);
       } else {
-        const mensaje = '⚠️ Respuesta no válida del asistente';
         setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
         speak(mensaje);
       }
+
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
