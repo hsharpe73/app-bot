@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   TextField,
@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
+import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
@@ -34,20 +35,13 @@ const formatCLP = (num) => {
   }).format(parsed);
 };
 
-// Convertidor de número a texto
 const numeroATexto = (num) => {
-  const unidades = [
-    '', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
-    'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'
-  ];
-  const decenas = [
-    '', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta',
-    'setenta', 'ochenta', 'noventa'
-  ];
-  const centenas = [
-    '', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos',
-    'seiscientos', 'setecientos', 'ochocientos', 'novecientos'
-  ];
+  const unidades = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
+    'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve'];
+  const decenas = ['', '', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta',
+    'setenta', 'ochenta', 'noventa'];
+  const centenas = ['', 'cien', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos',
+    'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
 
   const seccion = (n) => {
     if (n < 20) return unidades[n];
@@ -73,7 +67,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-
+  const recognitionRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -93,18 +87,13 @@ const ChatBot = () => {
 
   const speak = (text) => {
     let cleaned = text.replace(/<[^>]*>?/gm, '');
-
-    // Detectar montos como $236.295.738 y convertir a texto
     cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
       const numeric = parseInt(rawNumber.replace(/\./g, ''));
       return `${numeroATexto(numeric)} pesos`;
     });
-
     const utterance = new SpeechSynthesisUtterance(cleaned);
     const selectedVoice = getSpanishVoice();
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-    }
+    if (selectedVoice) utterance.voice = selectedVoice;
     utterance.lang = 'es-CL';
     speechSynthesis.speak(utterance);
   };
@@ -117,29 +106,22 @@ const ChatBot = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return;
-
     const newMsg = { sender: 'user', text: input };
     setMessages((prev) => [...prev, newMsg]);
     setInput('');
     setLoading(true);
-
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
       let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
-        ? res.data
-        : 'Sin respuesta del asistente';
+        ? res.data : 'Sin respuesta del asistente';
 
       respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
         const limpio = match.replace(/\./g, '').replace('$', '');
         return `<strong>${formatCLP(limpio)}</strong>`;
       });
-
       respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-
       const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-        ? '⚠️ No se encontró información para esa factura.'
-        : respuesta;
-
+        ? '⚠️ No se encontró información para esa factura.' : respuesta;
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
       speak(mensaje);
     } catch (err) {
@@ -157,100 +139,55 @@ const ChatBot = () => {
     speak(welcome);
   };
 
+  const handleVoice = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      alert('Tu navegador no soporta reconocimiento de voz');
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!recognitionRef.current) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = 'es-CL';
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.maxAlternatives = 1;
+      recognitionRef.current.onresult = (event) => {
+        const voiceInput = event.results[0][0].transcript;
+        setInput(voiceInput);
+        setTimeout(handleSend, 100);
+      };
+    }
+    recognitionRef.current.start();
+  };
+
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(to right, #e0c3fc, #8ec5fc)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        p: 2,
-      }}
-    >
-      <Paper
-        elevation={10}
-        sx={{
-          width: '100%',
-          maxWidth: 700,
-          borderRadius: 4,
-          p: 3,
-          backgroundColor: 'rgba(255, 255, 255, 0.7)',
-          backdropFilter: 'blur(12px)',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-        }}
-      >
+    <Box sx={{ minHeight: '100vh', background: 'linear-gradient(to right, #e0c3fc, #8ec5fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 2 }}>
+      <Paper elevation={10} sx={{ width: '100%', maxWidth: 700, borderRadius: 4, p: 3, backgroundColor: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(12px)', boxShadow: '0 8px 30px rgba(0,0,0,0.2)' }}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Stack direction="row" spacing={2} alignItems="center">
-            <Box sx={{ width: 50 }}>
-              <Lottie animationData={botAnimation} loop={true} />
-            </Box>
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              sx={{ color: '#ff5722' }}
-            >
-              Asistente de Ventas
-            </Typography>
+            <Box sx={{ width: 50 }}><Lottie animationData={botAnimation} loop={true} /></Box>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: '#ff5722' }}>Asistente de Ventas</Typography>
           </Stack>
           <Tooltip title="Limpiar conversación">
-            <IconButton color="error" onClick={handleClear}>
-              <DeleteSweepIcon />
-            </IconButton>
+            <IconButton color="error" onClick={handleClear}><DeleteSweepIcon /></IconButton>
           </Tooltip>
         </Stack>
 
         <Divider sx={{ my: 2 }} />
 
-        <Box
-          sx={{
-            height: isMobile ? 350 : 450,
-            overflowY: 'auto',
-            border: '2px solid #ffe0b2',
-            borderRadius: 3,
-            p: 2,
-            backgroundColor: '#ffffffdd',
-          }}
-        >
+        <Box sx={{ height: isMobile ? 350 : 450, overflowY: 'auto', border: '2px solid #ffe0b2', borderRadius: 3, p: 2, backgroundColor: '#ffffffdd' }}>
           <Stack spacing={2}>
             {messages.map((msg, index) => (
-              <Slide
-                direction="up"
-                in
-                mountOnEnter
-                unmountOnExit
-                key={index}
-                timeout={{ enter: 250 }}
-              >
-                <Box
-                  sx={{
-                    alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                    backgroundColor: msg.sender === 'user' ? '#ff7043' : '#26c6da',
-                    color: '#fff',
-                    px: 2,
-                    py: 1.5,
-                    borderRadius: 2,
-                    maxWidth: '85%',
-                    boxShadow: 3,
-                  }}
-                >
-                  <Typography variant="caption" fontWeight="bold">
-                    {msg.sender === 'user' ? 'Tú' : 'Asistente'}
-                  </Typography>
-                  <Typography
-                    variant="body2"
-                    component="div"
-                    dangerouslySetInnerHTML={{ __html: msg.text }}
-                  />
+              <Slide direction="up" in mountOnEnter unmountOnExit key={index} timeout={{ enter: 250 }}>
+                <Box sx={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: msg.sender === 'user' ? '#ff7043' : '#26c6da', color: '#fff', px: 2, py: 1.5, borderRadius: 2, maxWidth: '85%', boxShadow: 3 }}>
+                  <Typography variant="caption" fontWeight="bold">{msg.sender === 'user' ? 'Tú' : 'Asistente'}</Typography>
+                  <Typography variant="body2" component="div" dangerouslySetInnerHTML={{ __html: msg.text }} />
                 </Box>
               </Slide>
             ))}
             {loading && (
               <Stack direction="row" spacing={1} alignItems="center">
                 <CircularProgress size={16} />
-                <Typography variant="body2" color="textSecondary">
-                  Procesando...
-                </Typography>
+                <Typography variant="body2" color="textSecondary">Procesando...</Typography>
               </Stack>
             )}
           </Stack>
@@ -271,18 +208,13 @@ const ChatBot = () => {
             color="primary"
             endIcon={<SendIcon />}
             onClick={handleSend}
-            sx={{
-              backgroundColor: '#ff5722',
-              '&:hover': {
-                backgroundColor: '#e64a19',
-                transform: 'scale(1.05)',
-                transition: 'all 0.2s ease-in-out',
-              },
-              minWidth: 110,
-            }}
-          >
-            Enviar
-          </Button>
+            sx={{ backgroundColor: '#ff5722', '&:hover': { backgroundColor: '#e64a19', transform: 'scale(1.05)', transition: 'all 0.2s ease-in-out' }, minWidth: 110 }}
+          >Enviar</Button>
+          <Tooltip title="Hablar">
+            <IconButton onClick={handleVoice} sx={{ backgroundColor: '#ffcc80', ml: 1 }}>
+              <KeyboardVoiceIcon />
+            </IconButton>
+          </Tooltip>
         </Stack>
       </Paper>
     </Box>
