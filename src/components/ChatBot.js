@@ -22,7 +22,7 @@ import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
 
-const WEBHOOK_URL = 'https://sharpe-asistente.app.n8n.cloud/webhook/consulta-ventas-v3';
+const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
 const formatCLP = (num) => {
   const parsed = parseFloat(num);
