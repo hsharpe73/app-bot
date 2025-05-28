@@ -11,7 +11,6 @@ import {
   IconButton,
   Divider,
   Tooltip,
-  Avatar,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -21,6 +20,7 @@ import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
+import ChartRenderer from '../components/ChartRenderer';
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
@@ -112,18 +112,29 @@ const ChatBot = () => {
     setLoading(true);
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
-      let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
-        ? res.data : 'Sin respuesta del asistente';
 
-      respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
-        const limpio = match.replace(/\./g, '').replace('$', '');
-        return `<strong>${formatCLP(limpio)}</strong>`;
-      });
-      respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-      const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-        ? '⚠️ No se encontró información para esa factura.' : respuesta;
-      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-      speak(mensaje);
+      if (typeof res.data === 'object' && res.data !== null) {
+        const mensaje = res.data.respuesta || 'Sin respuesta del asistente';
+        const respuestaFormateada = mensaje
+          .replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
+            const limpio = match.replace(/\./g, '').replace('$', '');
+            return `<strong>${formatCLP(limpio)}</strong>`;
+          })
+          .replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+
+        const mensajeBot = {
+          sender: 'bot',
+          text: respuestaFormateada,
+          chart: res.data.grafico || null,
+        };
+
+        setMessages((prev) => [...prev, mensajeBot]);
+        speak(mensaje);
+      } else {
+        const mensaje = '⚠️ Respuesta no válida del asistente';
+        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+        speak(mensaje);
+      }
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
@@ -181,6 +192,7 @@ const ChatBot = () => {
                 <Box sx={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: msg.sender === 'user' ? '#ff7043' : '#26c6da', color: '#fff', px: 2, py: 1.5, borderRadius: 2, maxWidth: '85%', boxShadow: 3 }}>
                   <Typography variant="caption" fontWeight="bold">{msg.sender === 'user' ? 'Tú' : 'Asistente'}</Typography>
                   <Typography variant="body2" component="div" dangerouslySetInnerHTML={{ __html: msg.text }} />
+                  {msg.chart && <ChartRenderer tipo={msg.chart.tipo} datos={msg.chart.datos} />}
                 </Box>
               </Slide>
             ))}
