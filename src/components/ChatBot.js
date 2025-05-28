@@ -11,6 +11,7 @@ import {
   IconButton,
   Divider,
   Tooltip,
+  Avatar,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
@@ -21,7 +22,7 @@ import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
 
-const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
+const WEBHOOK_URL = 'https://sharpe-asistente.app.n8n.cloud/webhook/consulta-ventas-v3';
 
 const formatCLP = (num) => {
   const parsed = parseFloat(num);
@@ -111,28 +112,18 @@ const ChatBot = () => {
     setLoading(true);
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
+      let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
+        ? res.data : 'Sin respuesta del asistente';
 
-      if (typeof res.data === 'object' && res.data !== null) {
-        const mensaje = res.data.respuesta || 'Sin respuesta del asistente';
-        const respuestaFormateada = mensaje
-          .replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
-            const limpio = match.replace(/\./g, '').replace('$', '');
-            return `<strong>${formatCLP(limpio)}</strong>`;
-          })
-          .replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-
-        const mensajeBot = {
-          sender: 'bot',
-          text: respuestaFormateada,
-        };
-
-        setMessages((prev) => [...prev, mensajeBot]);
-        speak(mensaje);
-      } else {
-        const mensaje = '⚠️ Respuesta no válida del asistente';
-        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-        speak(mensaje);
-      }
+      respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
+        const limpio = match.replace(/\./g, '').replace('$', '');
+        return `<strong>${formatCLP(limpio)}</strong>`;
+      });
+      respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+      const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
+        ? '⚠️ No se encontró información para esa factura.' : respuesta;
+      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+      speak(mensaje);
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
