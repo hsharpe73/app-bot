@@ -22,7 +22,7 @@ import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
 import ChartRenderer from '../components/ChartRenderer';
 
-const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/e1ede365-bd47-4677-bd5c-84468cf11f81';
+const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
 const formatCLP = (num) => {
   const parsed = parseFloat(num);
@@ -113,15 +113,8 @@ const ChatBot = () => {
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
 
-      let mensaje = '⚠️ Respuesta no válida del asistente';
-      let mensajeBot = null;
-
-      if (typeof res.data === 'string') {
-        mensaje = res.data;
-        mensajeBot = { sender: 'bot', text: mensaje };
-      } else if (typeof res.data === 'object' && res.data !== null) {
-        mensaje = res.data.respuesta || 'Sin respuesta del asistente';
-
+      if (typeof res.data === 'object' && res.data !== null) {
+        const mensaje = res.data.respuesta || 'Sin respuesta del asistente';
         const respuestaFormateada = mensaje
           .replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
             const limpio = match.replace(/\./g, '').replace('$', '');
@@ -129,21 +122,19 @@ const ChatBot = () => {
           })
           .replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
 
-        mensajeBot = {
+        const mensajeBot = {
           sender: 'bot',
           text: respuestaFormateada,
           chart: res.data.grafico || null,
         };
-      }
 
-      if (mensajeBot) {
         setMessages((prev) => [...prev, mensajeBot]);
         speak(mensaje);
       } else {
+        const mensaje = '⚠️ Respuesta no válida del asistente';
         setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
         speak(mensaje);
       }
-
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
