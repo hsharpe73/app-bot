@@ -21,6 +21,8 @@ import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
@@ -63,10 +65,20 @@ const numeroATexto = (num) => {
   return seccion(num);
 };
 
+const exportarAExcel = (datos, nombre = 'reporte.xlsx') => {
+  const ws = XLSX.utils.json_to_sheet(datos);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Hoja1');
+  const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([buffer], { type: 'application/octet-stream' });
+  saveAs(blob, nombre);
+};
+
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [excelData, setExcelData] = useState(null); // para guardar los datos de Excel si vienen
   const recognitionRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -110,10 +122,17 @@ const ChatBot = () => {
     setMessages((prev) => [...prev, newMsg]);
     setInput('');
     setLoading(true);
+    setExcelData(null); // Limpiar datos anteriores
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
-      let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
-        ? res.data : 'Sin respuesta del asistente';
+
+      if (res.data.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
+        setExcelData(res.data.data);
+      }
+
+      let respuesta = typeof res.data === 'string'
+        ? res.data
+        : res.data.message?.content || 'Sin respuesta del asistente';
 
       respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
         const limpio = match.replace(/\./g, '').replace('$', '');
@@ -137,6 +156,7 @@ const ChatBot = () => {
     const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
     setMessages([{ sender: 'bot', text: welcome }]);
     speak(welcome);
+    setExcelData(null);
   };
 
   const handleVoice = () => {
@@ -189,6 +209,16 @@ const ChatBot = () => {
                 <CircularProgress size={16} />
                 <Typography variant="body2" color="textSecondary">Procesando...</Typography>
               </Stack>
+            )}
+            {excelData && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={() => exportarAExcel(excelData)}
+                sx={{ mt: 2 }}
+              >
+                Descargar Excel
+              </Button>
             )}
           </Stack>
         </Box>
