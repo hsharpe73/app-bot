@@ -131,49 +131,59 @@ const ChatBot = () => {
   }, []);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-    const newMsg = { sender: 'user', text: input };
-    setMessages((prev) => [...prev, newMsg]);
-    setInput('');
-    setLoading(true);
-    try {
-      const res = await axios.post(WEBHOOK_URL, { pregunta: input });
-      const esInforme = res.data?.resultados && Array.isArray(res.data.resultados);
-      setInformeData(esInforme ? res.data : null);
+  if (!input.trim()) return;
+  const newMsg = { sender: 'user', text: input };
+  setMessages((prev) => [...prev, newMsg]);
+  setInput('');
+  setLoading(true);
+  try {
+    const res = await axios.post(WEBHOOK_URL, { pregunta: input });
 
-      if (!esInforme) {
-        let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
-          ? res.data : 'Sin respuesta del asistente';
+    const esInforme = res.data?.resultados && Array.isArray(res.data.resultados);
+    setInformeData(esInforme ? res.data : null);
 
-        respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
-          const limpio = match.replace(/\./g, '').replace('$', '');
-          return `<strong>${formatCLP(limpio)}</strong>`;
-        });
-        respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-        const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-          ? '⚠️ No se encontró información para esa factura.' : respuesta;
-
-        speechSynthesis.cancel();
-        setTextoPendiente('');
-        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-        speak(mensaje);
-      } else {
-        const mensaje = '🧾 Informe recibido correctamente. Se muestra a continuación.';
-        speechSynthesis.cancel();
-        setTextoPendiente('');
-        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-        speak(mensaje);
-      }
-    } catch (err) {
-      const errorMsg = '⚠️ Error al conectar con el asistente';
+    if (esInforme) {
+      const mensaje = '🧾 Informe recibido correctamente. Se muestra a continuación.';
       speechSynthesis.cancel();
       setTextoPendiente('');
-      setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
-      speak(errorMsg);
-    } finally {
-      setLoading(false);
+      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+      speak(mensaje);
+    } else {
+      let respuesta = '';
+
+      if (typeof res.data === 'string') {
+        respuesta = res.data;
+      } else if (res.data?.message?.content) {
+        respuesta = res.data.message.content;
+      } else {
+        respuesta = 'Sin respuesta del asistente';
+      }
+
+      respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
+        const limpio = match.replace(/\./g, '').replace('$', '');
+        return `<strong>${formatCLP(limpio)}</strong>`;
+      });
+      respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+
+      const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
+        ? '⚠️ No se encontró información para esa factura.' : respuesta;
+
+      speechSynthesis.cancel();
+      setTextoPendiente('');
+      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+      speak(mensaje);
     }
-  };
+  } catch (err) {
+    const errorMsg = '⚠️ Error al conectar con el asistente';
+    speechSynthesis.cancel();
+    setTextoPendiente('');
+    setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
+    speak(errorMsg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const descargarPDF = async () => {
     const elemento = document.getElementById('informe-generado');
