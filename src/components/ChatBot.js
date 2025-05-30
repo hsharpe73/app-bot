@@ -71,6 +71,7 @@ const ChatBot = () => {
   const [vozActiva, setVozActiva] = useState(true);
   const [textoPendiente, setTextoPendiente] = useState('');
   const recognitionRef = useRef(null);
+  const utteranceRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -78,7 +79,6 @@ const ChatBot = () => {
     speechSynthesis.getVoices();
   }, []);
 
-  
   useEffect(() => {
     if (!vozActiva && speechSynthesis.speaking) {
       speechSynthesis.cancel();
@@ -86,15 +86,12 @@ const ChatBot = () => {
     }
   }, [vozActiva]);
 
-  
   useEffect(() => {
     if (vozActiva && textoPendiente) {
       speak(textoPendiente);
       setTextoPendiente('');
     }
   }, [vozActiva]);
-
-  const utteranceRef = useRef(null);
 
   const getSpanishVoice = () => {
     const voices = speechSynthesis.getVoices();
@@ -148,10 +145,18 @@ const ChatBot = () => {
       respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
       const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
         ? '⚠️ No se encontró información para esa factura.' : respuesta;
+
+      speechSynthesis.cancel();          // ✅ Cancelar voz anterior
+      setTextoPendiente('');            // ✅ Limpiar texto pendiente
+
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
       speak(mensaje);
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
+
+      speechSynthesis.cancel();         // ✅ Cancelar voz anterior
+      setTextoPendiente('');           // ✅ Limpiar texto pendiente
+
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
       speak(errorMsg);
     } finally {
@@ -161,6 +166,10 @@ const ChatBot = () => {
 
   const handleClear = () => {
     const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
+
+    speechSynthesis.cancel();           // ✅ Cancelar voz anterior
+    setTextoPendiente('');             // ✅ Limpiar texto pendiente
+
     setMessages([{ sender: 'bot', text: welcome }]);
     speak(welcome);
   };
