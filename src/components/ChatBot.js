@@ -183,42 +183,50 @@ const ChatBot = () => {
     }
   };
 
-  const descargarExcel = () => {
-    if (!informeData || !informeData.resultados) return;
+ const descargarExcel = () => {
+  if (!informeData || !informeData.resultados) return;
 
-    const resultados = informeData.resultados;
-    const formattedData = resultados.map((row) => {
-      const newRow = {};
-      Object.keys(row).forEach((key) => {
-        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
-        let value = row[key];
+  const resultados = informeData.resultados;
+  const formattedData = resultados.map((row) => {
+    const newRow = {};
+    Object.keys(row).forEach((key) => {
+      const formattedKey = key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 
-        if (typeof value === 'number' && /total|neto|iva|compra/i.test(formattedKey)) {
-          value = formatCLP(value).toString();
-        }
+      let value = row[key];
 
-        newRow[formattedKey] = value;
-      });
-      return newRow;
-    });
-
-    const ws = XLSX.utils.json_to_sheet(formattedData);
-
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cellAddress = XLSX.utils.encode_cell({ c: C, r: 0 });
-      if (ws[cellAddress]) {
-        ws[cellAddress].s = {
-          font: { bold: true },
-          alignment: { horizontal: 'center', vertical: 'center' },
-        };
+      if (
+        typeof value === 'number' &&
+        /total|neto|iva|compra/i.test(formattedKey)
+      ) {
+        // Fuerza a string con formato CLP y lo mantiene como texto con comilla inicial
+        value = `'${formatCLP(value)}'`;
       }
-    }
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Informe');
-    XLSX.writeFile(wb, 'informe-ventas.xlsx');
-  };
+      newRow[formattedKey] = value;
+    });
+    return newRow;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(formattedData);
+
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    const cellAddress = XLSX.utils.encode_cell({ c: C, r: 0 });
+    if (ws[cellAddress]) {
+      ws[cellAddress].s = {
+        font: { bold: true },
+        alignment: { horizontal: 'center', vertical: 'center' },
+      };
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Informe');
+  XLSX.writeFile(wb, 'informe-ventas.xlsx');
+};
+
 
   const handleClear = () => {
     const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
