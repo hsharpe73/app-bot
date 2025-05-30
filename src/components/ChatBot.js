@@ -143,7 +143,7 @@ const ChatBot = () => {
       setInformeData(esInforme ? res.data : null);
 
       if (esInforme) {
-        const mensaje = '🧾 Informe disponible para descargar.';
+        const mensaje = '📜 Informe disponible para descargar.';
         speechSynthesis.cancel();
         setTextoPendiente('');
         setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
@@ -191,10 +191,12 @@ const ChatBot = () => {
     const formattedData = resultados.map((row) => {
       const newRow = {};
       Object.keys(row).forEach((key) => {
-        const formattedKey = key
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (char) => char.toUpperCase());
-        newRow[formattedKey] = row[key];
+        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        let value = row[key];
+        if (typeof value === 'number') {
+          value = formatCLP(value);
+        }
+        newRow[formattedKey] = value;
       });
       return newRow;
     });
