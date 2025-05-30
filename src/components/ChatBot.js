@@ -78,7 +78,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [excelData, setExcelData] = useState(null); // para guardar los datos de Excel si vienen
+  const [excelData, setExcelData] = useState(null);
   const recognitionRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -122,9 +122,13 @@ const ChatBot = () => {
     setMessages((prev) => [...prev, newMsg]);
     setInput('');
     setLoading(true);
-    setExcelData(null); // Limpiar datos anteriores
+    setExcelData(null);
+
     try {
-      const res = await axios.post(WEBHOOK_URL, { pregunta: input });
+      const exportar = /exportar|descargar/i.test(input);
+      const payload = exportar ? { pregunta: input, exportar: true } : { pregunta: input };
+
+      const res = await axios.post(WEBHOOK_URL, payload);
 
       if (res.data.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
         setExcelData(res.data.data);
@@ -139,8 +143,11 @@ const ChatBot = () => {
         return `<strong>${formatCLP(limpio)}</strong>`;
       });
       respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+
       const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-        ? '⚠️ No se encontró información para esa factura.' : respuesta;
+        ? '⚠️ No se encontró información para esa factura.'
+        : respuesta;
+
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
       speak(mensaje);
     } catch (err) {
@@ -239,7 +246,9 @@ const ChatBot = () => {
             endIcon={<SendIcon />}
             onClick={handleSend}
             sx={{ backgroundColor: '#ff5722', '&:hover': { backgroundColor: '#e64a19', transform: 'scale(1.05)', transition: 'all 0.2s ease-in-out' }, minWidth: 110 }}
-          >Enviar</Button>
+          >
+            Enviar
+          </Button>
           <Tooltip title="Hablar">
             <IconButton onClick={handleVoice} sx={{ backgroundColor: '#ffcc80', ml: 1 }}>
               <KeyboardVoiceIcon />
