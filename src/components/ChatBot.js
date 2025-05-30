@@ -78,6 +78,23 @@ const ChatBot = () => {
     speechSynthesis.getVoices();
   }, []);
 
+  
+  useEffect(() => {
+    if (!vozActiva && speechSynthesis.speaking) {
+      speechSynthesis.cancel();
+    }
+  }, [vozActiva]);
+
+  
+  useEffect(() => {
+    if (vozActiva && messages.length > 0) {
+      const last = messages[messages.length - 1];
+      if (last.sender === 'bot') {
+        speak(last.text);
+      }
+    }
+  }, [vozActiva]);
+
   const getSpanishVoice = () => {
     const voices = speechSynthesis.getVoices();
     return voices.find((voice) =>
