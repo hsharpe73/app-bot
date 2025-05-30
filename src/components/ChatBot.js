@@ -14,6 +14,8 @@ import {
   Avatar,
   useMediaQuery,
   useTheme,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
@@ -67,6 +69,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [vozActiva, setVozActiva] = useState(true);
   const recognitionRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -86,6 +89,7 @@ const ChatBot = () => {
   };
 
   const speak = (text) => {
+    if (!vozActiva) return;
     let cleaned = text.replace(/<[^>]*>?/gm, '');
     cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
       const numeric = parseInt(rawNumber.replace(/\./g, ''));
@@ -193,7 +197,7 @@ const ChatBot = () => {
           </Stack>
         </Box>
 
-        <Stack direction="row" spacing={1} mt={2}>
+        <Stack direction="row" spacing={1} mt={2} alignItems="center">
           <TextField
             fullWidth
             value={input}
@@ -216,6 +220,18 @@ const ChatBot = () => {
             </IconButton>
           </Tooltip>
         </Stack>
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={vozActiva}
+              onChange={(e) => setVozActiva(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Voz activa"
+          sx={{ mt: 2 }}
+        />
       </Paper>
     </Box>
   );
