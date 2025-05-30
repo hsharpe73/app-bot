@@ -184,47 +184,54 @@ const ChatBot = () => {
   };
 
   const descargarExcel = () => {
-    if (!informeData || !informeData.resultados) return;
+  if (!informeData || !informeData.resultados) return;
 
-    const resultados = informeData.resultados;
-    const formattedData = resultados.map((row) => {
-      const newRow = {};
-      Object.keys(row).forEach((key) => {
-        const formattedKey = key
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (char) => char.toUpperCase());
+  const resultados = informeData.resultados;
+  const formattedData = resultados.map((row) => {
+    const newRow = {};
+    Object.keys(row).forEach((key) => {
+      const formattedKey = key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 
-        let value = row[key];
+      let value = row[key];
 
-        if (
-          typeof value === 'number' &&
-          /total|neto|iva|compra/i.test(formattedKey)
-        ) {
-          value = formatCLP(value).toString(); // <--- aquí está la conversión
-        }
+      // Forzar como texto con formato CLP
+      if (typeof value === 'number' && /total|neto|iva|compra/i.test(formattedKey)) {
+        value = formatCLP(value);
+      }
 
-        newRow[formattedKey] = value;
-      });
-      return newRow;
+      newRow[formattedKey] = value.toString(); // <- fuerza string explícito
     });
+    return newRow;
+  });
 
-    const ws = XLSX.utils.json_to_sheet(formattedData);
+  const ws = XLSX.utils.json_to_sheet(formattedData);
 
-    const range = XLSX.utils.decode_range(ws['!ref']);
+  // Estilizar cabecera y forzar tipo string en cada celda
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let R = range.s.r; R <= range.e.r; ++R) {
     for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cellAddress = XLSX.utils.encode_cell({ c: C, r: 0 });
-      if (ws[cellAddress]) {
-        ws[cellAddress].s = {
+      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+      const cell = ws[cellAddress];
+      if (!cell) continue;
+
+      if (R === 0) {
+        cell.s = {
           font: { bold: true },
           alignment: { horizontal: 'center', vertical: 'center' },
         };
+      } else {
+        cell.t = 's'; // Forzar tipo string para evitar .0
       }
     }
+  }
 
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Informe');
-    XLSX.writeFile(wb, 'informe-ventas.xlsx');
-  };
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Informe');
+  XLSX.writeFile(wb, 'informe-ventas.xlsx');
+};
+
 
   const handleClear = () => {
     const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
