@@ -190,17 +190,11 @@ const ChatBot = () => {
     const formattedData = resultados.map((row) => {
       const newRow = {};
       Object.keys(row).forEach((key) => {
-        const formattedKey = key
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, (char) => char.toUpperCase());
-
+        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
         let value = row[key];
 
-        if (
-          typeof value === 'number' &&
-          /total|neto|iva|compra/i.test(formattedKey)
-        ) {
-          value = formatCLP(value).toString(); // <- ✅ Esto evita el .0 y mantiene los puntos y el signo $
+        if (typeof value === 'number' && /total|neto|iva|compra/i.test(formattedKey)) {
+          value = formatCLP(value).toString();
         }
 
         newRow[formattedKey] = value;
