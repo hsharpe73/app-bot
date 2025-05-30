@@ -22,6 +22,8 @@ import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
@@ -70,6 +72,7 @@ const ChatBot = () => {
   const [loading, setLoading] = useState(false);
   const [vozActiva, setVozActiva] = useState(true);
   const [textoPendiente, setTextoPendiente] = useState('');
+  const [informeData, setInformeData] = useState(null);
   const recognitionRef = useRef(null);
   const utteranceRef = useRef(null);
   const theme = useTheme();
@@ -135,28 +138,36 @@ const ChatBot = () => {
     setLoading(true);
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
-      let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
-        ? res.data : 'Sin respuesta del asistente';
+      const esInforme = res.data?.resultados && Array.isArray(res.data.resultados);
+      setInformeData(esInforme ? res.data : null);
 
-      respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
-        const limpio = match.replace(/\./g, '').replace('$', '');
-        return `<strong>${formatCLP(limpio)}</strong>`;
-      });
-      respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-      const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-        ? '⚠️ No se encontró información para esa factura.' : respuesta;
+      if (!esInforme) {
+        let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
+          ? res.data : 'Sin respuesta del asistente';
 
-      speechSynthesis.cancel();          // ✅ Cancelar voz anterior
-      setTextoPendiente('');            // ✅ Limpiar texto pendiente
+        respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
+          const limpio = match.replace(/\./g, '').replace('$', '');
+          return `<strong>${formatCLP(limpio)}</strong>`;
+        });
+        respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+        const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
+          ? '⚠️ No se encontró información para esa factura.' : respuesta;
 
-      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-      speak(mensaje);
+        speechSynthesis.cancel();
+        setTextoPendiente('');
+        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+        speak(mensaje);
+      } else {
+        const mensaje = '🧾 Informe recibido correctamente. Se muestra a continuación.';
+        speechSynthesis.cancel();
+        setTextoPendiente('');
+        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+        speak(mensaje);
+      }
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
-
-      speechSynthesis.cancel();         // ✅ Cancelar voz anterior
-      setTextoPendiente('');           // ✅ Limpiar texto pendiente
-
+      speechSynthesis.cancel();
+      setTextoPendiente('');
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
       speak(errorMsg);
     } finally {
@@ -164,14 +175,31 @@ const ChatBot = () => {
     }
   };
 
+  const descargarPDF = async () => {
+    const elemento = document.getElementById('informe-generado');
+    if (!elemento) return;
+    const canvas = await html2canvas(elemento);
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pageWidth;
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, 'PNG', 0, 10, pdfWidth, pdfHeight);
+    pdf.save('informe-ventas.pdf');
+  };
+
   const handleClear = () => {
     const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
-
-    speechSynthesis.cancel();           // ✅ Cancelar voz anterior
-    setTextoPendiente('');             // ✅ Limpiar texto pendiente
-
+    speechSynthesis.cancel();
+    setTextoPendiente('');
     setMessages([{ sender: 'bot', text: welcome }]);
     speak(welcome);
+    setInformeData(null);
   };
 
   const handleVoice = () => {
@@ -227,6 +255,40 @@ const ChatBot = () => {
             )}
           </Stack>
         </Box>
+
+        {informeData && (
+          <Box sx={{ mt: 3, p: 2, backgroundColor: '#ffffffee', borderRadius: 2, border: '1px solid #ccc' }}>
+            <Box id="informe-generado">
+              <Typography variant="h6" gutterBottom>📊 Informe generado</Typography>
+              <Typography variant="body2" sx={{ mb: 2, fontStyle: 'italic' }}>
+                Pregunta: {informeData.pregunta}
+              </Typography>
+              <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {Object.keys(informeData.resultados[0]).map((col, i) => (
+                      <th key={i} style={{ textAlign: 'left', padding: '8px', borderBottom: '1px solid #ddd' }}>{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {informeData.resultados.map((fila, idx) => (
+                    <tr key={idx}>
+                      {Object.values(fila).map((valor, j) => (
+                        <td key={j} style={{ padding: '6px', borderBottom: '1px solid #eee' }}>
+                          {typeof valor === 'number' ? formatCLP(valor) : valor}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </Box>
+            </Box>
+            <Button onClick={descargarPDF} variant="outlined" color="secondary" sx={{ mt: 2 }}>
+              Descargar PDF
+            </Button>
+          </Box>
+        )}
 
         <Stack direction="row" spacing={1} mt={2} alignItems="center">
           <TextField
