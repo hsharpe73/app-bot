@@ -130,7 +130,7 @@ const ChatBot = () => {
     speak(welcome);
   }, []);
 
-  const handleSend = async () => {
+ const handleSend = async () => {
   if (!input.trim()) return;
   const newMsg = { sender: 'user', text: input };
   setMessages((prev) => [...prev, newMsg]);
@@ -139,7 +139,7 @@ const ChatBot = () => {
   try {
     const res = await axios.post(WEBHOOK_URL, { pregunta: input });
 
-    const esInforme = res.data?.resultados && Array.isArray(res.data.resultados);
+    const esInforme = res.data?.esInforme === true;
     setInformeData(esInforme ? res.data : null);
 
     if (esInforme) {
