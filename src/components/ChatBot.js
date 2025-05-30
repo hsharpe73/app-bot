@@ -11,7 +11,6 @@ import {
   IconButton,
   Divider,
   Tooltip,
-  Avatar,
   useMediaQuery,
   useTheme,
   Switch,
@@ -70,6 +69,7 @@ const ChatBot = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [vozActiva, setVozActiva] = useState(true);
+  const [textoPendiente, setTextoPendiente] = useState('');
   const recognitionRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -82,18 +82,19 @@ const ChatBot = () => {
   useEffect(() => {
     if (!vozActiva && speechSynthesis.speaking) {
       speechSynthesis.cancel();
+      setTextoPendiente(utteranceRef.current?.text || '');
     }
   }, [vozActiva]);
 
   
   useEffect(() => {
-    if (vozActiva && messages.length > 0) {
-      const last = messages[messages.length - 1];
-      if (last.sender === 'bot') {
-        speak(last.text);
-      }
+    if (vozActiva && textoPendiente) {
+      speak(textoPendiente);
+      setTextoPendiente('');
     }
   }, [vozActiva]);
+
+  const utteranceRef = useRef(null);
 
   const getSpanishVoice = () => {
     const voices = speechSynthesis.getVoices();
@@ -106,13 +107,17 @@ const ChatBot = () => {
   };
 
   const speak = (text) => {
-    if (!vozActiva) return;
+    if (!vozActiva) {
+      setTextoPendiente(text);
+      return;
+    }
     let cleaned = text.replace(/<[^>]*>?/gm, '');
     cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
       const numeric = parseInt(rawNumber.replace(/\./g, ''));
       return `${numeroATexto(numeric)} pesos`;
     });
     const utterance = new SpeechSynthesisUtterance(cleaned);
+    utteranceRef.current = utterance;
     const selectedVoice = getSpanishVoice();
     if (selectedVoice) utterance.voice = selectedVoice;
     utterance.lang = 'es-CL';
