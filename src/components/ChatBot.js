@@ -21,8 +21,6 @@ import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import axios from 'axios';
 import Lottie from 'lottie-react';
 import botAnimation from '../assets/bot.json';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
@@ -65,20 +63,10 @@ const numeroATexto = (num) => {
   return seccion(num);
 };
 
-const exportarAExcel = (datos, nombre = 'reporte.xlsx') => {
-  const ws = XLSX.utils.json_to_sheet(datos);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Hoja1');
-  const buffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-  const blob = new Blob([buffer], { type: 'application/octet-stream' });
-  saveAs(blob, nombre);
-};
-
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [excelData, setExcelData] = useState(null);
   const recognitionRef = useRef(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -122,32 +110,18 @@ const ChatBot = () => {
     setMessages((prev) => [...prev, newMsg]);
     setInput('');
     setLoading(true);
-    setExcelData(null);
-
     try {
-      const exportar = /exportar|descargar/i.test(input);
-      const payload = exportar ? { pregunta: input, exportar: true } : { pregunta: input };
-
-      const res = await axios.post(WEBHOOK_URL, payload);
-
-      if (res.data.data && Array.isArray(res.data.data) && res.data.data.length > 0) {
-        setExcelData(res.data.data);
-      }
-
-      let respuesta = typeof res.data === 'string'
-        ? res.data
-        : res.data.message?.content || 'Sin respuesta del asistente';
+      const res = await axios.post(WEBHOOK_URL, { pregunta: input });
+      let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
+        ? res.data : 'Sin respuesta del asistente';
 
       respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
         const limpio = match.replace(/\./g, '').replace('$', '');
         return `<strong>${formatCLP(limpio)}</strong>`;
       });
       respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-
       const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-        ? '⚠️ No se encontró información para esa factura.'
-        : respuesta;
-
+        ? '⚠️ No se encontró información para esa factura.' : respuesta;
       setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
       speak(mensaje);
     } catch (err) {
@@ -163,7 +137,6 @@ const ChatBot = () => {
     const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
     setMessages([{ sender: 'bot', text: welcome }]);
     speak(welcome);
-    setExcelData(null);
   };
 
   const handleVoice = () => {
@@ -217,16 +190,6 @@ const ChatBot = () => {
                 <Typography variant="body2" color="textSecondary">Procesando...</Typography>
               </Stack>
             )}
-            {excelData && (
-              <Button
-                variant="contained"
-                color="success"
-                onClick={() => exportarAExcel(excelData)}
-                sx={{ mt: 2 }}
-              >
-                Descargar Excel
-              </Button>
-            )}
           </Stack>
         </Box>
 
@@ -246,9 +209,7 @@ const ChatBot = () => {
             endIcon={<SendIcon />}
             onClick={handleSend}
             sx={{ backgroundColor: '#ff5722', '&:hover': { backgroundColor: '#e64a19', transform: 'scale(1.05)', transition: 'all 0.2s ease-in-out' }, minWidth: 110 }}
-          >
-            Enviar
-          </Button>
+          >Enviar</Button>
           <Tooltip title="Hablar">
             <IconButton onClick={handleVoice} sx={{ backgroundColor: '#ffcc80', ml: 1 }}>
               <KeyboardVoiceIcon />
