@@ -196,34 +196,30 @@ const ChatBot = () => {
 
       let value = row[key];
 
-      // Forzar como texto con formato CLP
-      if (typeof value === 'number' && /total|neto|iva|compra/i.test(formattedKey)) {
-        value = formatCLP(value);
+      // ⚠️ Convertir a string formateada SIEMPRE si es total/compra/iva/neto
+      if (
+        typeof value === 'number' &&
+        /total|neto|iva|compra/i.test(formattedKey)
+      ) {
+        value = `'${formatCLP(value)}'`; // ← ← ← NOTA: comilla simple inicial fuerza texto en Excel
       }
 
-      newRow[formattedKey] = value.toString(); // <- fuerza string explícito
+      newRow[formattedKey] = value;
     });
     return newRow;
   });
 
   const ws = XLSX.utils.json_to_sheet(formattedData);
 
-  // Estilizar cabecera y forzar tipo string en cada celda
+  // Estilos para encabezados
   const range = XLSX.utils.decode_range(ws['!ref']);
-  for (let R = range.s.r; R <= range.e.r; ++R) {
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-      const cell = ws[cellAddress];
-      if (!cell) continue;
-
-      if (R === 0) {
-        cell.s = {
-          font: { bold: true },
-          alignment: { horizontal: 'center', vertical: 'center' },
-        };
-      } else {
-        cell.t = 's'; // Forzar tipo string para evitar .0
-      }
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    const cellAddress = XLSX.utils.encode_cell({ c: C, r: 0 });
+    if (ws[cellAddress]) {
+      ws[cellAddress].s = {
+        font: { bold: true },
+        alignment: { horizontal: 'center', vertical: 'center' },
+      };
     }
   }
 
