@@ -21,6 +21,7 @@ import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import KeyboardVoiceIcon from '@mui/icons-material/KeyboardVoice';
 import axios from 'axios';
 import Lottie from 'lottie-react';
+import * as XLSX from 'xlsx';
 import botAnimation from '../assets/bot.json';
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
@@ -70,6 +71,7 @@ const ChatBot = () => {
   const [loading, setLoading] = useState(false);
   const [vozActiva, setVozActiva] = useState(true);
   const [textoPendiente, setTextoPendiente] = useState('');
+  const [informeData, setInformeData] = useState(null);
   const recognitionRef = useRef(null);
   const utteranceRef = useRef(null);
   const theme = useTheme();
@@ -135,28 +137,45 @@ const ChatBot = () => {
     setLoading(true);
     try {
       const res = await axios.post(WEBHOOK_URL, { pregunta: input });
-      let respuesta = typeof res.data === 'string' && res.data.trim() !== ''
-        ? res.data : 'Sin respuesta del asistente';
 
-      respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
-        const limpio = match.replace(/\./g, '').replace('$', '');
-        return `<strong>${formatCLP(limpio)}</strong>`;
-      });
-      respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
-      const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-        ? '⚠️ No se encontró información para esa factura.' : respuesta;
+      const esInforme = res.data?.esInforme === true;
+      setInformeData(esInforme ? res.data : null);
 
-      speechSynthesis.cancel();          // ✅ Cancelar voz anterior
-      setTextoPendiente('');            // ✅ Limpiar texto pendiente
+      if (esInforme) {
+        const mensaje = '📜 Informe disponible para descargar.';
+        speechSynthesis.cancel();
+        setTextoPendiente('');
+        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+        speak(mensaje);
+      } else {
+        let respuesta = '';
 
-      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-      speak(mensaje);
+        if (typeof res.data === 'string') {
+          respuesta = res.data;
+        } else if (res.data?.message?.content) {
+          respuesta = res.data.message.content;
+        } else {
+          respuesta = 'Sin respuesta del asistente';
+        }
+
+        respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
+          const limpio = match.replace(/\./g, '').replace('$', '');
+          return `<strong>${formatCLP(limpio)}</strong>`;
+        });
+        respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+
+        const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
+          ? '⚠️ No se encontró información para esa factura.' : respuesta;
+
+        speechSynthesis.cancel();
+        setTextoPendiente('');
+        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+        speak(mensaje);
+      }
     } catch (err) {
       const errorMsg = '⚠️ Error al conectar con el asistente';
-
-      speechSynthesis.cancel();         // ✅ Cancelar voz anterior
-      setTextoPendiente('');           // ✅ Limpiar texto pendiente
-
+      speechSynthesis.cancel();
+      setTextoPendiente('');
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
       speak(errorMsg);
     } finally {
@@ -164,14 +183,59 @@ const ChatBot = () => {
     }
   };
 
+  const descargarExcel = () => {
+  if (!informeData || !informeData.resultados) return;
+
+  const resultados = informeData.resultados;
+  const formattedData = resultados.map((row) => {
+    const newRow = {};
+    Object.keys(row).forEach((key) => {
+      const formattedKey = key
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (char) => char.toUpperCase());
+
+      let value = row[key];
+
+      if (
+        typeof value === 'number' &&
+        /total|neto|iva|compra/i.test(formattedKey)
+      ) {
+        // Formatear como texto CLP
+        value = formatCLP(value).toString();
+      }
+
+      newRow[formattedKey] = value;
+    });
+    return newRow;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(formattedData, { cellText: true });
+
+  // Estilizar encabezados
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let C = range.s.c; C <= range.e.c; ++C) {
+    const cellAddress = XLSX.utils.encode_cell({ c: C, r: 0 });
+    if (ws[cellAddress]) {
+      ws[cellAddress].s = {
+        font: { bold: true },
+        alignment: { horizontal: 'center', vertical: 'center' },
+      };
+    }
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Informe');
+  XLSX.writeFile(wb, 'informe-ventas.xlsx');
+};
+
+
   const handleClear = () => {
     const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
-
-    speechSynthesis.cancel();           // ✅ Cancelar voz anterior
-    setTextoPendiente('');             // ✅ Limpiar texto pendiente
-
+    speechSynthesis.cancel();
+    setTextoPendiente('');
     setMessages([{ sender: 'bot', text: welcome }]);
     speak(welcome);
+    setInformeData(null);
   };
 
   const handleVoice = () => {
@@ -227,6 +291,17 @@ const ChatBot = () => {
             )}
           </Stack>
         </Box>
+
+        {informeData && (
+          <Box sx={{ mt: 3, p: 2, backgroundColor: '#ffffffee', borderRadius: 2, border: '1px solid #ccc' }}>
+            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+              Pregunta: {informeData.pregunta}
+            </Typography>
+            <Button onClick={descargarExcel} variant="outlined" color="success" sx={{ mt: 2 }}>
+              Descargar Excel
+            </Button>
+          </Box>
+        )}
 
         <Stack direction="row" spacing={1} mt={2} alignItems="center">
           <TextField
