@@ -196,12 +196,12 @@ const ChatBot = () => {
 
       let value = row[key];
 
-      // ⚠️ Convertir a string formateada SIEMPRE si es total/compra/iva/neto
       if (
         typeof value === 'number' &&
         /total|neto|iva|compra/i.test(formattedKey)
       ) {
-        value = `'${formatCLP(value)}'`; // ← ← ← NOTA: comilla simple inicial fuerza texto en Excel
+        // Aplicar formato CLP manualmente y forzar string para evitar interpretación automática
+        value = `'${formatCLP(value)}'`; // ← con comilla simple al inicio
       }
 
       newRow[formattedKey] = value;
@@ -211,7 +211,6 @@ const ChatBot = () => {
 
   const ws = XLSX.utils.json_to_sheet(formattedData);
 
-  // Estilos para encabezados
   const range = XLSX.utils.decode_range(ws['!ref']);
   for (let C = range.s.c; C <= range.e.c; ++C) {
     const cellAddress = XLSX.utils.encode_cell({ c: C, r: 0 });
