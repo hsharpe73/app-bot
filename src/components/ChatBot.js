@@ -130,58 +130,73 @@ const ChatBot = () => {
   }, []);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-    const newMsg = { sender: 'user', text: input };
-    setMessages((prev) => [...prev, newMsg]);
-    setInput('');
-    setLoading(true);
-    try {
-      const res = await axios.post(WEBHOOK_URL, { pregunta: input });
+  if (!input.trim()) return;
+  const newMsg = { sender: 'user', text: input };
+  setMessages((prev) => [...prev, newMsg]);
+  setInput('');
 
-      const esInforme = res.data?.esInforme === true;
-      setInformeData(esInforme ? res.data : null);
+  const saludoDetectado = ['hola', 'buenas', 'buenos días', 'buenas tardes', 'buenas noches'].some(s =>
+    newMsg.text.toLowerCase().includes(s)
+  );
 
-      if (esInforme) {
-        const mensaje = '📜 Informe disponible para descargar.';
-        speechSynthesis.cancel();
-        setTextoPendiente('');
-        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-        speak(mensaje);
-      } else {
-        let respuesta = '';
+  if (saludoDetectado) {
+    const respuestaSaludo = '¡Hola! ¿En qué puedo ayudarte hoy?';
+    speechSynthesis.cancel();
+    setTextoPendiente('');
+    setMessages((prev) => [...prev, { sender: 'bot', text: respuestaSaludo }]);
+    speak(respuestaSaludo);
+    return;
+  }
 
-        if (typeof res.data === 'string') {
-          respuesta = res.data;
-        } else if (res.data?.message?.content) {
-          respuesta = res.data.message.content;
-        } else {
-          respuesta = 'Sin respuesta del asistente';
-        }
+  setLoading(true);
+  try {
+    const res = await axios.post(WEBHOOK_URL, { pregunta: newMsg.text });
 
-        respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
-          const limpio = match.replace(/\./g, '').replace('$', '');
-          return `<strong>${formatCLP(limpio)}</strong>`;
-        });
-        respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+    const esInforme = res.data?.esInforme === true;
+    setInformeData(esInforme ? res.data : null);
 
-        const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-          ? '⚠️ No se encontró información para esa factura.' : respuesta;
-
-        speechSynthesis.cancel();
-        setTextoPendiente('');
-        setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
-        speak(mensaje);
-      }
-    } catch (err) {
-      const errorMsg = '⚠️ Error al conectar con el asistente';
+    if (esInforme) {
+      const mensaje = '📜 Informe disponible para descargar.';
       speechSynthesis.cancel();
       setTextoPendiente('');
-      setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
-      speak(errorMsg);
-    } finally {
-      setLoading(false);
+      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+      speak(mensaje);
+    } else {
+      let respuesta = '';
+
+      if (typeof res.data === 'string') {
+        respuesta = res.data;
+      } else if (res.data?.message?.content) {
+        respuesta = res.data.message.content;
+      } else {
+        respuesta = 'Sin respuesta del asistente';
+      }
+
+      respuesta = respuesta.replace(/\$\d{1,3}(?:\.\d{3})+/g, (match) => {
+        const limpio = match.replace(/\./g, '').replace('$', '');
+        return `<strong>${formatCLP(limpio)}</strong>`;
+      });
+      respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
+
+      const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
+        ? '⚠️ No se encontró información para esa factura.' : respuesta;
+
+      speechSynthesis.cancel();
+      setTextoPendiente('');
+      setMessages((prev) => [...prev, { sender: 'bot', text: mensaje }]);
+      speak(mensaje);
     }
-  };
+  } catch (err) {
+    const errorMsg = '⚠️ Error al conectar con el asistente';
+    speechSynthesis.cancel();
+    setTextoPendiente('');
+    setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
+    speak(errorMsg);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const descargarExcel = () => {
   if (!informeData || !informeData.resultados) return;
