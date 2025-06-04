@@ -49,11 +49,21 @@ const InformeChart = ({ data }) => {
   const encontrarColumna = (posibles, tipo = 'texto') => {
     const encontrado = normalizadas.find(n => posibles.includes(n.clean));
     if (encontrado) return encontrado.original;
+
     if (tipo === 'numero') {
-      return columnas.find(k => {
+      // Excluir columnas como "mes", "id", etc.
+      const columnasNumericas = columnas.filter(k => {
         const val = parseFloat(primeraFila[k]);
-        return !isNaN(val) && val > 0 && normaliza(k) !== 'id';
+        const key = normaliza(k);
+        return !isNaN(val) && val > 0 && key !== 'id' && key !== 'mes';
       });
+
+      // Priorizar columnas que tengan coincidencia parcial con 'total', 'neto', etc.
+      const preferida = posiblesValores
+        .map(v => columnas.find(k => normaliza(k).includes(v)))
+        .find(Boolean);
+
+      return preferida || columnasNumericas[0];
     } else {
       return columnas.find(k => normaliza(k) !== 'id');
     }
@@ -64,7 +74,9 @@ const InformeChart = ({ data }) => {
 
   const etiquetas = data.map(r => {
     const valor = r[etiquetaKey];
-    return etiquetaKey.toLowerCase().includes('mes') ? nombreMes(valor) : valor?.toString() || 'Sin nombre';
+    return etiquetaKey.toLowerCase().includes('mes')
+      ? nombreMes(valor)
+      : valor?.toString() || 'Sin nombre';
   });
 
   const valores = data.map(r => parseFloat(r[valorKey]) || 0);
