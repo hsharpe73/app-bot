@@ -139,7 +139,7 @@ const InformeChart = ({ data }) => {
         font: { size: isMobile ? 14 : 18 },
       },
       datalabels: tipoGrafico === 'bar' ? {
-        display: ctx => ctx.dataset.data[ctx.dataIndex] > 10000000,
+        display: ctx => ctx.dataIndex === 0 || ctx.dataset.data[ctx.dataIndex] > 10000000,
         color: '#000',
         anchor: 'end',
         align: 'top',
