@@ -37,6 +37,22 @@ const formateaTitulo = (texto) =>
     .replace(/_/g, ' ')
     .replace(/\b\w/g, l => l.toUpperCase());
 
+const agruparDatos = (etiquetas, valores) => {
+  const mapa = new Map();
+  etiquetas.forEach((etiqueta, index) => {
+    const valor = valores[index];
+    if (mapa.has(etiqueta)) {
+      mapa.set(etiqueta, mapa.get(etiqueta) + valor);
+    } else {
+      mapa.set(etiqueta, valor);
+    }
+  });
+  return {
+    etiquetas: Array.from(mapa.keys()),
+    valores: Array.from(mapa.values())
+  };
+};
+
 const InformeChart = ({ data }) => {
   if (!data || !data.length) return null;
 
@@ -75,14 +91,20 @@ const InformeChart = ({ data }) => {
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
   const valorKey = encontrarColumna(posiblesValores, 'numero');
 
-  const etiquetas = data.map(r => {
+  let etiquetas = data.map(r => {
     const valor = r[etiquetaKey];
     return etiquetaKey.toLowerCase().includes('mes')
       ? nombreMes(valor)
       : valor?.toString() || 'Sin nombre';
   });
 
-  const valores = data.map(r => parseFloat(r[valorKey]) || 0);
+  let valores = data.map(r => parseFloat(r[valorKey]) || 0);
+
+  // Agrupar valores por etiqueta
+  const agrupado = agruparDatos(etiquetas, valores);
+  etiquetas = agrupado.etiquetas;
+  valores = agrupado.valores;
+
   const total = valores.reduce((acc, val) => acc + val, 0);
   const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
   const mostrarCLP = etiquetas.length <= 3 && etiquetas.length === data.length;
