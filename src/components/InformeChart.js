@@ -107,7 +107,6 @@ const InformeChart = ({ data }) => {
   valores = agrupado.valores;
 
   const total = valores.reduce((acc, val) => acc + val, 0);
-  const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
   const mostrarCLP = etiquetas.length <= 3 && etiquetas.length === data.length;
 
   const chartData = {
@@ -120,66 +119,52 @@ const InformeChart = ({ data }) => {
         borderColor: '#fff',
         borderWidth: 1,
         barPercentage: 0.6,
-        categoryPercentage: 0.6,
+        categoryPercentage: 0.7,
       },
     ],
   };
 
   const options = {
     responsive: true,
-    indexAxis: tipoGrafico === 'bar' ? 'x' : undefined,
-    scales: tipoGrafico === 'bar' ? {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: value => formatCLP(value),
-          font: {
-            size: isMobile ? 9 : 11,
-          }
-        }
-      },
-      x: {
-        ticks: {
-          font: {
-            size: isMobile ? 9 : 11,
-          }
-        }
-      }
-    } : {},
+    maintainAspectRatio: false,
     plugins: {
       legend: { display: true },
       title: {
         display: true,
-        text: tipoGrafico === 'pie'
-          ? `Distribución por ${formateaTitulo(etiquetaKey)}`
-          : `Valores por ${formateaTitulo(etiquetaKey)}`,
+        text: `Valores por ${formateaTitulo(etiquetaKey)}`,
         font: {
-          size: isMobile ? 14 : 18
-        }
+          size: isMobile ? 14 : 18,
+        },
       },
-      datalabels: tipoGrafico === 'bar' ? {
+      datalabels: {
         color: '#000',
         anchor: 'end',
         align: 'top',
         formatter: (value) => formatCLP(value),
         font: {
           weight: 'bold',
-          size: isMobile ? 9 : 11,
-        }
-      } : tipoGrafico === 'pie' ? {
-        color: '#fff',
-        align: 'center',
-        anchor: 'center',
+          size: isMobile ? 8 : 10,
+        },
         clamp: true,
-        formatter: (value) => {
-          const porcentaje = ((value / total) * 100).toFixed(1);
-          return `${formatCLP(value)} (${porcentaje}%)`;
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: (value) => formatCLP(value),
+          font: {
+            size: isMobile ? 9 : 11,
+          },
         },
-        font: {
-          weight: 'bold',
-          size: isMobile ? 9 : 12,
+      },
+      x: {
+        ticks: {
+          font: {
+            size: isMobile ? 9 : 11,
+          },
         },
-      } : null,
+      },
     },
   };
 
@@ -188,8 +173,8 @@ const InformeChart = ({ data }) => {
     const canvas = chartCanvas.querySelector('canvas');
     const image = await html2canvas(canvas, { scale: 1.5 });
     const imgData = image.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'portrait' });
-    pdf.addImage(imgData, 'PNG', 20, 20, 160, 120);
+    const pdf = new jsPDF({ orientation: 'landscape' });
+    pdf.addImage(imgData, 'PNG', 20, 20, 250, 120);
     pdf.save('informe-grafico.pdf');
   };
 
@@ -199,20 +184,17 @@ const InformeChart = ({ data }) => {
       marginTop: 3,
       borderRadius: 3,
       backgroundColor: '#fff',
-      maxWidth: isMobile ? '100%' : 520,
-      mx: 'auto',
+      width: '100%',
+      overflowX: 'auto',
     }}>
-      <Box ref={chartRef} sx={{
-        position: 'relative',
-        padding: 1,
-        width: isMobile ? 320 : 480,
-        mx: 'auto'
-      }}>
-        {tipoGrafico === 'pie' ? (
-          <Pie data={chartData} options={options} />
-        ) : (
-          <Bar data={chartData} options={options} />
-        )}
+      <Box
+        ref={chartRef}
+        sx={{
+          minWidth: 600,
+          height: 300,
+        }}
+      >
+        <Bar data={chartData} options={options} />
       </Box>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button
