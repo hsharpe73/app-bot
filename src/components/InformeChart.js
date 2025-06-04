@@ -109,6 +109,7 @@ const InformeChart = ({ data }) => {
 
   const total = valores.reduce((acc, val) => acc + val, 0);
   const tipoGrafico = etiquetas.length <= 4 ? 'pie' : 'bar';
+  const maxValor = Math.max(...valores);
 
   const chartData = {
     labels: etiquetas,
@@ -148,8 +149,7 @@ const InformeChart = ({ data }) => {
       datalabels: tipoGrafico === 'bar' ? {
         display: (ctx) => {
           const value = ctx.dataset.data[ctx.dataIndex];
-          const max = Math.max(...ctx.dataset.data);
-          return value === max || value > 10000000;
+          return value === maxValor || value > 10000000;
         },
         color: '#000',
         anchor: 'end',
@@ -159,19 +159,20 @@ const InformeChart = ({ data }) => {
         formatter: (value) => formatCLP(value),
         font: {
           weight: 'bold',
-          size: isMobile ? 8 : 10,
+          size: etiquetas.length > 10 ? 7 : isMobile ? 8 : 10,
         },
       } : {
         color: '#fff',
         align: 'center',
         anchor: 'center',
         formatter: (value, ctx) => {
+          const label = ctx.chart.data.labels[ctx.dataIndex] || '';
           const porcentaje = ((value / total) * 100).toFixed(1);
-          return `${formatCLP(value)} (${porcentaje}%)`;
+          return `${label}\n${formatCLP(value)} (${porcentaje}%)`;
         },
         font: {
           weight: 'bold',
-          size: isMobile ? 9 : 11,
+          size: isMobile ? 8 : 11,
         },
       },
     },
@@ -185,7 +186,7 @@ const InformeChart = ({ data }) => {
       },
       x: {
         ticks: {
-          font: { size: isMobile ? 9 : 11 },
+          font: { size: etiquetas.length > 10 ? 7 : isMobile ? 9 : 11 },
           maxRotation: 45,
           minRotation: 45,
         },
