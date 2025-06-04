@@ -140,8 +140,8 @@ const InformeChart = ({ data }) => {
       },
       datalabels: tipoGrafico === 'pie' ? {
         color: '#fff',
-        align: 'center',
-        anchor: 'center',
+        align: 'end', // <-- posición más adentro del sector
+        anchor: 'end',
         formatter: (value) => {
           const porcentaje = ((value / total) * 100).toFixed(1);
           return `${formatCLP(value)} (${porcentaje}%)`;
@@ -160,7 +160,7 @@ const InformeChart = ({ data }) => {
     const image = await html2canvas(canvas, { scale: 1.2 });
     const imgData = image.toDataURL('image/png');
     const pdf = new jsPDF({ orientation: 'portrait' });
-    pdf.addImage(imgData, 'PNG', 20, 20, 160, 120); // tamaño ajustado
+    pdf.addImage(imgData, 'PNG', 20, 20, 160, 120);
     pdf.save('informe-grafico.pdf');
   };
 
