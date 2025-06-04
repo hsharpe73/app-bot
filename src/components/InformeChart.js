@@ -86,11 +86,7 @@ const InformeChart = ({ data }) => {
   };
 
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
-
-  // Priorizar explícitamente 'total' si existe
-  const valorKey = columnas.includes('total')
-    ? 'total'
-    : encontrarColumna(posiblesValores, 'numero');
+  const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
 
   let etiquetas = data.map(r => {
     const valor = r[etiquetaKey];
@@ -136,8 +132,10 @@ const InformeChart = ({ data }) => {
       },
       datalabels: tipoGrafico === 'pie' ? {
         color: '#fff',
-        formatter: (value) =>
-          mostrarCLP ? formatCLP(value) : `${((value / total) * 100).toFixed(1)}%`,
+        formatter: (value) => {
+          const porcentaje = ((value / total) * 100).toFixed(1);
+          return `${formatCLP(value)} (${porcentaje}%)`;
+        },
         font: {
           weight: 'bold',
           size: 14,
