@@ -140,8 +140,9 @@ const InformeChart = ({ data }) => {
       },
       datalabels: tipoGrafico === 'pie' ? {
         color: '#fff',
-        align: 'end', // <-- posición más adentro del sector
-        anchor: 'end',
+        align: 'center',
+        anchor: 'center',
+        clamp: true, // fuerza que el texto no se salga del sector
         formatter: (value) => {
           const porcentaje = ((value / total) * 100).toFixed(1);
           return `${formatCLP(value)} (${porcentaje}%)`;
