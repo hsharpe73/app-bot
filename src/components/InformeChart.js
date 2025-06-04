@@ -49,9 +49,10 @@ const InformeChart = ({ data }) => {
   const chartRef = useRef(null);
   const isMobile = useMediaQuery('(max-width:600px)');
 
-  if (!data || !data.length) return null;
+  if (!data || !data.rows || !data.rows.length) return null;
 
-  const primeraFila = data[0];
+  const { rows, tipoGrafico } = data;
+  const primeraFila = rows[0];
   const columnas = Object.keys(primeraFila);
   const normalizadas = columnas.map(col => ({
     original: col,
@@ -86,7 +87,7 @@ const InformeChart = ({ data }) => {
   const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
 
   const agrupado = {};
-  data.forEach(r => {
+  rows.forEach(r => {
     const nombre = etiquetaKey.toLowerCase().includes('mes') ? nombreMes(r[etiquetaKey]) : r[etiquetaKey]?.toString() || 'Sin nombre';
     const valor = parseFloat(r[valorKey]) || 0;
     if (agrupado[nombre]) {
@@ -99,7 +100,6 @@ const InformeChart = ({ data }) => {
   const etiquetas = Object.keys(agrupado);
   const valores = Object.values(agrupado);
   const total = valores.reduce((acc, val) => acc + val, 0);
-  const tipoGrafico = etiquetas.length <= 4 ? 'pie' : 'bar'; // ✅ lógica actualizada
 
   const chartData = {
     labels: etiquetas,
