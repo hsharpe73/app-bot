@@ -100,8 +100,12 @@ const InformeChart = ({ data }) => {
       mes = nombreMes(mes);
     }
 
-    const cliente = r[clienteKey]?.toString() || 'Sin cliente';
-    const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente;
+    let cliente = r[clienteKey];
+    if (!cliente && etiquetaKey && normaliza(etiquetaKey).includes('mes')) {
+      cliente = 'Cliente fijo';
+    }
+
+    const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente || mes || 'Sin nombre';
 
     etiquetas.push(etiqueta);
     valores.push(valor);
