@@ -99,7 +99,7 @@ const InformeChart = ({ data }) => {
   const etiquetas = Object.keys(agrupado);
   const valores = Object.values(agrupado);
   const total = valores.reduce((acc, val) => acc + val, 0);
-  const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
+  const tipoGrafico = etiquetas.length <= 4 ? 'pie' : 'bar'; // ✅ lógica actualizada
 
   const chartData = {
     labels: etiquetas,
