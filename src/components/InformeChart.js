@@ -85,6 +85,7 @@ const InformeChart = ({ data }) => {
 
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
   const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
+
   const mesKey = columnas.find(k => normaliza(k) === 'mes');
   const clienteKey = columnas.find(k => k !== mesKey && normaliza(k).includes('cliente'));
 
@@ -136,7 +137,11 @@ const InformeChart = ({ data }) => {
       legend: {
         display: true,
         position: tipoGrafico === 'pie' ? 'bottom' : 'top',
-        labels: { font: { size: isMobile ? 9 : 12 } },
+        labels: {
+          font: {
+            size: isMobile ? 9 : 12,
+          },
+        },
       },
       title: {
         display: true,
@@ -210,14 +215,15 @@ const InformeChart = ({ data }) => {
       borderRadius: 3,
       backgroundColor: '#fff',
       width: '100%',
-      overflowX: 'auto',
+      overflow: 'hidden',
     }}>
       <Box
         ref={chartRef}
         sx={{
           width: '100%',
-          height: isMobile ? 250 : 300,
-          minWidth: isMobile ? '100%' : 600,
+          maxWidth: isMobile ? '100%' : '850px',
+          margin: '0 auto',
+          height: isMobile ? 260 : 350,
         }}
       >
         {tipoGrafico === 'pie' ? (
