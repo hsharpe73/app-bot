@@ -21,6 +21,14 @@ const nombreMes = (num) => {
   return index >= 1 && index <= 12 ? meses[index - 1] : num;
 };
 
+const formatCLP = (num) =>
+  new Intl.NumberFormat('es-CL', {
+    style: 'currency',
+    currency: 'CLP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
+
 const InformeChart = ({ data }) => {
   if (!data || !data.length) return null;
 
@@ -40,6 +48,7 @@ const InformeChart = ({ data }) => {
   });
 
   const valores = data.map(r => parseFloat(r[valorKey]) || 0);
+  const total = valores.reduce((acc, val) => acc + val, 0);
 
   const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
 
@@ -47,10 +56,10 @@ const InformeChart = ({ data }) => {
     labels: etiquetas,
     datasets: [
       {
-        label: valorKey || "Valores",
+        label: valorKey || 'Valores',
         data: valores,
         backgroundColor: [
-          '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40'
+          '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40',
         ],
         borderColor: '#fff',
         borderWidth: 1,
@@ -58,7 +67,7 @@ const InformeChart = ({ data }) => {
     ],
   };
 
-  const total = valores.reduce((acc, val) => acc + val, 0);
+  const mostrarCLP = etiquetas.length <= 3 && etiquetas.length === data.length;
 
   const options = {
     responsive: true,
@@ -72,14 +81,12 @@ const InformeChart = ({ data }) => {
       },
       datalabels: tipoGrafico === 'pie' ? {
         color: '#fff',
-        formatter: (value) => {
-          const porcentaje = (value / total) * 100;
-          return `${porcentaje.toFixed(1)}%`;
-        },
+        formatter: (value) =>
+          mostrarCLP ? formatCLP(value) : `${((value / total) * 100).toFixed(1)}%`,
         font: {
           weight: 'bold',
-          size: 14
-        }
+          size: 14,
+        },
       } : null,
     },
   };
