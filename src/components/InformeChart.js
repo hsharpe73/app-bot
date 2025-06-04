@@ -29,26 +29,38 @@ const formatCLP = (num) =>
     maximumFractionDigits: 0,
   }).format(num);
 
+const normaliza = (texto) =>
+  texto.toString().toLowerCase().replace(/\s|_/g, '');
+
 const InformeChart = ({ data }) => {
   if (!data || !data.length) return null;
 
-  const posiblesEtiquetas = ['cliente', 'nombre_cliente', 'nombre client', 'categoria_doc', 'direccion_destino', 'mes', 'periodo'];
+  const primeraFila = data[0];
+  const columnas = Object.keys(primeraFila);
+
+  const normalizadas = columnas.map(col => ({
+    original: col,
+    clean: normaliza(col),
+  }));
+
+  const posiblesEtiquetas = ['cliente', 'nombrecliente', 'categoria', 'mes', 'periodo'];
   const posiblesValores = ['total', 'monto', 'valor', 'neto', 'iva'];
 
-  const primeraFila = data[0];
+  const encontrarColumna = (posibles, tipo = 'texto') => {
+    const encontrado = normalizadas.find(n => posibles.includes(n.clean));
+    if (encontrado) return encontrado.original;
+    if (tipo === 'numero') {
+      return columnas.find(k => {
+        const val = parseFloat(primeraFila[k]);
+        return !isNaN(val) && val > 0 && normaliza(k) !== 'id';
+      });
+    } else {
+      return columnas.find(k => normaliza(k) !== 'id');
+    }
+  };
 
-  // Buscar clave de etiqueta preferida (evita "id")
-  const etiquetaKey = posiblesEtiquetas.find(k =>
-    Object.keys(primeraFila).some(col => col.toLowerCase().includes(k))
-  ) || Object.keys(primeraFila).find(col => col.toLowerCase() !== 'id');
-
-  // Buscar clave de valor numérico preferida
-  const valorKey = posiblesValores.find(k =>
-    Object.keys(primeraFila).some(col => col.toLowerCase().includes(k))
-  ) || Object.keys(primeraFila).find(k => {
-    const val = parseFloat(primeraFila[k]);
-    return !isNaN(val) && val > 0 && k.toLowerCase() !== 'id';
-  });
+  const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
+  const valorKey = encontrarColumna(posiblesValores, 'numero');
 
   const etiquetas = data.map(r => {
     const valor = r[etiquetaKey];
