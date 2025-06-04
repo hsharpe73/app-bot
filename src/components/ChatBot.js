@@ -23,7 +23,8 @@ import axios from 'axios';
 import Lottie from 'lottie-react';
 import * as XLSX from 'xlsx';
 import botAnimation from '../assets/bot.json';
-import InformeChart from './components/InformeChart';
+import InformeChart from './InformeChart';
+
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
