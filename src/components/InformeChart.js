@@ -10,25 +10,35 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Box } from '@mui/material';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend, ChartDataLabels);
+
+const nombreMes = (num) => {
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const index = parseInt(num, 10);
+  return index >= 1 && index <= 12 ? meses[index - 1] : num;
+};
 
 const InformeChart = ({ data }) => {
   if (!data || !data.length) return null;
 
-  const posiblesEtiquetas = ['cliente', 'nombre_cliente', 'categoria_doc', 'direccion_destino'];
+  const posiblesEtiquetas = ['cliente', 'nombre_cliente', 'categoria_doc', 'direccion_destino', 'mes', 'periodo', 'numero_mes'];
 
   const primeraFila = data[0];
   const etiquetaKey = posiblesEtiquetas.find(k => k in primeraFila) || Object.keys(primeraFila)[0];
 
-  
   const valorKey = Object.keys(primeraFila).find(k => {
     const val = parseFloat(primeraFila[k]);
     return !isNaN(val) && val > 0;
   });
 
-  const etiquetas = data.map(r => r[etiquetaKey]?.toString() || 'Sin nombre');
+  const etiquetas = data.map(r => {
+    const valor = r[etiquetaKey];
+    return etiquetaKey.toLowerCase().includes('mes') ? nombreMes(valor) : valor?.toString() || 'Sin nombre';
+  });
+
   const valores = data.map(r => parseFloat(r[valorKey]) || 0);
 
   const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
@@ -48,6 +58,8 @@ const InformeChart = ({ data }) => {
     ],
   };
 
+  const total = valores.reduce((acc, val) => acc + val, 0);
+
   const options = {
     responsive: true,
     plugins: {
@@ -58,6 +70,17 @@ const InformeChart = ({ data }) => {
           ? `Distribución por ${etiquetaKey}`
           : `Valores por ${etiquetaKey}`,
       },
+      datalabels: tipoGrafico === 'pie' ? {
+        color: '#fff',
+        formatter: (value) => {
+          const porcentaje = (value / total) * 100;
+          return `${porcentaje.toFixed(1)}%`;
+        },
+        font: {
+          weight: 'bold',
+          size: 14
+        }
+      } : null,
     },
   };
 
