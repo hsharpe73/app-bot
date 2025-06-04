@@ -134,7 +134,7 @@ const InformeChart = ({ data }) => {
     responsive: true,
     maintainAspectRatio: false,
     layout: {
-      padding: { left: 10, right: 10, top: 10, bottom: 10 }
+      padding: 10,
     },
     plugins: {
       legend: {
@@ -217,6 +217,7 @@ const InformeChart = ({ data }) => {
       marginTop: 3,
       borderRadius: 3,
       backgroundColor: '#fff',
+      width: '100%',
       maxWidth: '100%',
       overflowX: 'auto',
     }}>
@@ -224,16 +225,20 @@ const InformeChart = ({ data }) => {
         ref={chartRef}
         sx={{
           width: '100%',
-          height: isMobile ? 280 : 340,
+          maxWidth: '100%',
+          height: tipoGrafico === 'pie' ? (isMobile ? 280 : 340) : 'auto',
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
+          overflowX: 'auto'
         }}
       >
         {tipoGrafico === 'pie' ? (
           <Pie data={chartData} options={options} />
         ) : (
-          <Bar data={chartData} options={options} />
+          <Box sx={{ minWidth: isMobile ? 360 : 600, width: '100%' }}>
+            <Bar data={chartData} options={options} />
+          </Box>
         )}
       </Box>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
