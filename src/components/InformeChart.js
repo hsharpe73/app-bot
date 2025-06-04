@@ -32,14 +32,22 @@ const formatCLP = (num) =>
 const InformeChart = ({ data }) => {
   if (!data || !data.length) return null;
 
-  const posiblesEtiquetas = ['cliente', 'nombre_cliente', 'categoria_doc', 'direccion_destino', 'mes', 'periodo', 'numero_mes'];
+  const posiblesEtiquetas = ['cliente', 'nombre_cliente', 'nombre client', 'categoria_doc', 'direccion_destino', 'mes', 'periodo'];
+  const posiblesValores = ['total', 'monto', 'valor', 'neto', 'iva'];
 
   const primeraFila = data[0];
-  const etiquetaKey = posiblesEtiquetas.find(k => k in primeraFila) || Object.keys(primeraFila)[0];
 
-  const valorKey = Object.keys(primeraFila).find(k => {
+  // Buscar clave de etiqueta preferida (evita "id")
+  const etiquetaKey = posiblesEtiquetas.find(k =>
+    Object.keys(primeraFila).some(col => col.toLowerCase().includes(k))
+  ) || Object.keys(primeraFila).find(col => col.toLowerCase() !== 'id');
+
+  // Buscar clave de valor numérico preferida
+  const valorKey = posiblesValores.find(k =>
+    Object.keys(primeraFila).some(col => col.toLowerCase().includes(k))
+  ) || Object.keys(primeraFila).find(k => {
     const val = parseFloat(primeraFila[k]);
-    return !isNaN(val) && val > 0;
+    return !isNaN(val) && val > 0 && k.toLowerCase() !== 'id';
   });
 
   const etiquetas = data.map(r => {
@@ -49,8 +57,8 @@ const InformeChart = ({ data }) => {
 
   const valores = data.map(r => parseFloat(r[valorKey]) || 0);
   const total = valores.reduce((acc, val) => acc + val, 0);
-
   const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
+  const mostrarCLP = etiquetas.length <= 3 && etiquetas.length === data.length;
 
   const chartData = {
     labels: etiquetas,
@@ -59,15 +67,13 @@ const InformeChart = ({ data }) => {
         label: valorKey || 'Valores',
         data: valores,
         backgroundColor: [
-          '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40',
+          '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40'
         ],
         borderColor: '#fff',
         borderWidth: 1,
       },
     ],
   };
-
-  const mostrarCLP = etiquetas.length <= 3 && etiquetas.length === data.length;
 
   const options = {
     responsive: true,
