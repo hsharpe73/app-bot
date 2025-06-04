@@ -107,7 +107,7 @@ const InformeChart = ({ data }) => {
   valores = agrupado.valores;
 
   const total = valores.reduce((acc, val) => acc + val, 0);
-  const mostrarCLP = etiquetas.length <= 3 && etiquetas.length === data.length;
+  const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
 
   const chartData = {
     labels: etiquetas,
@@ -115,11 +115,9 @@ const InformeChart = ({ data }) => {
       {
         label: formateaTitulo(valorKey || 'Valores'),
         data: valores,
-        backgroundColor: '#ff6384',
-        borderColor: '#fff',
-        borderWidth: 1,
-        barPercentage: 0.6,
-        categoryPercentage: 0.7,
+        backgroundColor: '#36a2eb',
+        borderRadius: 4,
+        barThickness: 30,
       },
     ],
   };
@@ -131,12 +129,13 @@ const InformeChart = ({ data }) => {
       legend: { display: true },
       title: {
         display: true,
-        text: `Valores por ${formateaTitulo(etiquetaKey)}`,
-        font: {
-          size: isMobile ? 14 : 18,
-        },
+        text: tipoGrafico === 'pie'
+          ? `Distribución por ${formateaTitulo(etiquetaKey)}`
+          : `Valores por ${formateaTitulo(etiquetaKey)}`,
+        font: { size: isMobile ? 14 : 18 },
       },
-      datalabels: {
+      datalabels: tipoGrafico === 'bar' ? {
+        display: ctx => ctx.dataset.data[ctx.dataIndex] > 10000000,
         color: '#000',
         anchor: 'end',
         align: 'top',
@@ -145,33 +144,40 @@ const InformeChart = ({ data }) => {
           weight: 'bold',
           size: isMobile ? 8 : 10,
         },
-        clamp: true,
+      } : {
+        color: '#fff',
+        align: 'center',
+        anchor: 'center',
+        formatter: (value) => {
+          const porcentaje = ((value / total) * 100).toFixed(1);
+          return `${formatCLP(value)} (${porcentaje}%)`;
+        },
+        font: {
+          weight: 'bold',
+          size: isMobile ? 9 : 12,
+        },
       },
     },
-    scales: {
+    scales: tipoGrafico === 'bar' ? {
       y: {
         beginAtZero: true,
         ticks: {
           callback: (value) => formatCLP(value),
-          font: {
-            size: isMobile ? 9 : 11,
-          },
+          font: { size: isMobile ? 9 : 11 },
         },
       },
       x: {
         ticks: {
-          font: {
-            size: isMobile ? 9 : 11,
-          },
+          font: { size: isMobile ? 9 : 11 },
         },
       },
-    },
+    } : {},
   };
 
   const exportarPDF = async () => {
     const chartCanvas = chartRef.current;
     const canvas = chartCanvas.querySelector('canvas');
-    const image = await html2canvas(canvas, { scale: 1.5 });
+    const image = await html2canvas(canvas, { scale: 2 });
     const imgData = image.toDataURL('image/png');
     const pdf = new jsPDF({ orientation: 'landscape' });
     pdf.addImage(imgData, 'PNG', 20, 20, 250, 120);
@@ -187,14 +193,12 @@ const InformeChart = ({ data }) => {
       width: '100%',
       overflowX: 'auto',
     }}>
-      <Box
-        ref={chartRef}
-        sx={{
-          minWidth: 600,
-          height: 300,
-        }}
-      >
-        <Bar data={chartData} options={options} />
+      <Box ref={chartRef} sx={{ minWidth: 600, height: 300 }}>
+        {tipoGrafico === 'pie' ? (
+          <Pie data={chartData} options={options} />
+        ) : (
+          <Bar data={chartData} options={options} />
+        )}
       </Box>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button
