@@ -11,7 +11,7 @@ import {
   Legend,
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { Box, Button, useMediaQuery } from '@mui/material';
+import { Box, Button, Paper, useMediaQuery } from '@mui/material';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -134,6 +134,9 @@ const InformeChart = ({ data }) => {
         text: tipoGrafico === 'pie'
           ? `Distribución por ${formateaTitulo(etiquetaKey)}`
           : `Valores por ${formateaTitulo(etiquetaKey)}`,
+        font: {
+          size: isMobile ? 14 : 18
+        }
       },
       datalabels: tipoGrafico === 'pie' ? {
         color: '#fff',
@@ -145,7 +148,7 @@ const InformeChart = ({ data }) => {
         },
         font: {
           weight: 'bold',
-          size: isMobile ? 10 : 14,
+          size: isMobile ? 10 : 13,
         },
       } : null,
     },
@@ -164,18 +167,36 @@ const InformeChart = ({ data }) => {
   };
 
   return (
-    <Box sx={{ maxWidth: isMobile ? '100%' : 600, mx: 'auto', mt: 3 }} ref={chartRef}>
-      {tipoGrafico === 'pie' ? (
-        <Pie data={chartData} options={options} />
-      ) : (
-        <Bar data={chartData} options={options} />
-      )}
+    <Paper elevation={3} sx={{
+      padding: 2,
+      marginTop: 3,
+      borderRadius: 3,
+      backgroundColor: '#fff',
+      maxWidth: isMobile ? '100%' : 500,
+      mx: 'auto',
+    }}>
+      <Box ref={chartRef} sx={{ position: 'relative', padding: 1 }}>
+        {tipoGrafico === 'pie' ? (
+          <Pie data={chartData} options={options} />
+        ) : (
+          <Bar data={chartData} options={options} />
+        )}
+      </Box>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
-        <Button variant="contained" color="primary" onClick={exportarPDF}>
+        <Button
+          variant="contained"
+          onClick={exportarPDF}
+          sx={{
+            borderRadius: 2,
+            backgroundColor: '#1976d2',
+            fontWeight: 'bold',
+            '&:hover': { backgroundColor: '#1565c0' }
+          }}
+        >
           Descargar PDF
         </Button>
       </Box>
-    </Box>
+    </Paper>
   );
 };
 
