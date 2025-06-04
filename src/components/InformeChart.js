@@ -49,7 +49,6 @@ const InformeChart = ({ data }) => {
   const chartRef = useRef(null);
   const isMobile = useMediaQuery('(max-width:600px)');
 
-  // 🔍 Detectar si viene como [{ rows: [...] }] o directamente como resultados
   const rawData = Array.isArray(data) ? (data[0]?.rows || data[0]?.resultados || data) : [];
 
   if (!rawData || !rawData.length) return null;
@@ -123,7 +122,15 @@ const InformeChart = ({ data }) => {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: true },
+      legend: {
+        display: true,
+        position: tipoGrafico === 'pie' ? 'bottom' : 'top',
+        labels: {
+          font: {
+            size: isMobile ? 9 : 12,
+          },
+        },
+      },
       title: {
         display: true,
         text: tipoGrafico === 'pie'
@@ -153,7 +160,7 @@ const InformeChart = ({ data }) => {
         },
         font: {
           weight: 'bold',
-          size: isMobile ? 9 : 12,
+          size: isMobile ? 9 : 11,
         },
       },
     },
