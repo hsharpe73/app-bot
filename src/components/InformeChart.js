@@ -33,9 +33,7 @@ const normaliza = (texto) =>
   texto.toString().toLowerCase().replace(/\s|_/g, '');
 
 const formateaTitulo = (texto) =>
-  texto
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, l => l.toUpperCase());
+  texto.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
 const agruparDatos = (etiquetas, valores) => {
   const mapa = new Map();
@@ -58,7 +56,6 @@ const InformeChart = ({ data }) => {
 
   const primeraFila = data[0];
   const columnas = Object.keys(primeraFila);
-
   const normalizadas = columnas.map(col => ({
     original: col,
     clean: normaliza(col),
@@ -89,7 +86,11 @@ const InformeChart = ({ data }) => {
   };
 
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
-  const valorKey = encontrarColumna(posiblesValores, 'numero');
+
+  // Priorizar explícitamente 'total' si existe
+  const valorKey = columnas.includes('total')
+    ? 'total'
+    : encontrarColumna(posiblesValores, 'numero');
 
   let etiquetas = data.map(r => {
     const valor = r[etiquetaKey];
@@ -100,7 +101,6 @@ const InformeChart = ({ data }) => {
 
   let valores = data.map(r => parseFloat(r[valorKey]) || 0);
 
-  // Agrupar valores por etiqueta
   const agrupado = agruparDatos(etiquetas, valores);
   etiquetas = agrupado.etiquetas;
   valores = agrupado.valores;
