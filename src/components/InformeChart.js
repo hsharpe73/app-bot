@@ -10,6 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import { Box } from '@mui/material';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
@@ -21,7 +22,7 @@ const InformeChart = ({ data }) => {
   const primeraFila = data[0];
   const etiquetaKey = posiblesEtiquetas.find(k => k in primeraFila) || Object.keys(primeraFila)[0];
 
-  // Buscar valorKey de forma dinámica (que sea un número válido)
+  
   const valorKey = Object.keys(primeraFila).find(k => {
     const val = parseFloat(primeraFila[k]);
     return !isNaN(val) && val > 0;
@@ -53,14 +54,20 @@ const InformeChart = ({ data }) => {
       legend: { display: true },
       title: {
         display: true,
-        text: tipoGrafico === 'pie' ? `Distribución por ${etiquetaKey}` : `Valores por ${etiquetaKey}`,
+        text: tipoGrafico === 'pie'
+          ? `Distribución por ${etiquetaKey}`
+          : `Valores por ${etiquetaKey}`,
       },
     },
   };
 
-  return tipoGrafico === 'pie'
-    ? <Pie data={chartData} options={options} />
-    : <Bar data={chartData} options={options} />;
+  return tipoGrafico === 'pie' ? (
+    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 3 }}>
+      <Pie data={chartData} options={options} />
+    </Box>
+  ) : (
+    <Bar data={chartData} options={options} />
+  );
 };
 
 export default InformeChart;
