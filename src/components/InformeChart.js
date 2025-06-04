@@ -32,6 +32,11 @@ const formatCLP = (num) =>
 const normaliza = (texto) =>
   texto.toString().toLowerCase().replace(/\s|_/g, '');
 
+const formateaTitulo = (texto) =>
+  texto
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, l => l.toUpperCase());
+
 const InformeChart = ({ data }) => {
   if (!data || !data.length) return null;
 
@@ -51,14 +56,12 @@ const InformeChart = ({ data }) => {
     if (encontrado) return encontrado.original;
 
     if (tipo === 'numero') {
-      // Excluir columnas como "mes", "id", etc.
       const columnasNumericas = columnas.filter(k => {
         const val = parseFloat(primeraFila[k]);
         const key = normaliza(k);
         return !isNaN(val) && val > 0 && key !== 'id' && key !== 'mes';
       });
 
-      // Priorizar columnas que tengan coincidencia parcial con 'total', 'neto', etc.
       const preferida = posiblesValores
         .map(v => columnas.find(k => normaliza(k).includes(v)))
         .find(Boolean);
@@ -88,7 +91,7 @@ const InformeChart = ({ data }) => {
     labels: etiquetas,
     datasets: [
       {
-        label: valorKey || 'Valores',
+        label: formateaTitulo(valorKey || 'Valores'),
         data: valores,
         backgroundColor: [
           '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40'
@@ -106,8 +109,8 @@ const InformeChart = ({ data }) => {
       title: {
         display: true,
         text: tipoGrafico === 'pie'
-          ? `Distribución por ${etiquetaKey}`
-          : `Valores por ${etiquetaKey}`,
+          ? `Distribución por ${formateaTitulo(etiquetaKey)}`
+          : `Valores por ${formateaTitulo(etiquetaKey)}`,
       },
       datalabels: tipoGrafico === 'pie' ? {
         color: '#fff',
