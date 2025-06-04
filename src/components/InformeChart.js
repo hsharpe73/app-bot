@@ -37,22 +37,6 @@ const normaliza = (texto) =>
 const formateaTitulo = (texto) =>
   texto.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-const agruparDatos = (etiquetas, valores) => {
-  const mapa = new Map();
-  etiquetas.forEach((etiqueta, index) => {
-    const valor = valores[index];
-    if (mapa.has(etiqueta)) {
-      mapa.set(etiqueta, mapa.get(etiqueta) + valor);
-    } else {
-      mapa.set(etiqueta, valor);
-    }
-  });
-  return {
-    etiquetas: Array.from(mapa.keys()),
-    valores: Array.from(mapa.values())
-  };
-};
-
 const colores = [
   '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
   '#9966FF', '#FF9F40', '#8BC34A', '#E91E63',
@@ -101,19 +85,19 @@ const InformeChart = ({ data }) => {
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
   const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
 
-  let etiquetas = data.map(r => {
-    const valor = r[etiquetaKey];
-    return etiquetaKey.toLowerCase().includes('mes')
-      ? nombreMes(valor)
-      : valor?.toString() || 'Sin nombre';
+  const agrupado = {};
+  data.forEach(r => {
+    const nombre = etiquetaKey.toLowerCase().includes('mes') ? nombreMes(r[etiquetaKey]) : r[etiquetaKey]?.toString() || 'Sin nombre';
+    const valor = parseFloat(r[valorKey]) || 0;
+    if (agrupado[nombre]) {
+      agrupado[nombre] += valor;
+    } else {
+      agrupado[nombre] = valor;
+    }
   });
 
-  let valores = data.map(r => parseFloat(r[valorKey]) || 0);
-
-  const agrupado = agruparDatos(etiquetas, valores);
-  etiquetas = agrupado.etiquetas;
-  valores = agrupado.valores;
-
+  const etiquetas = Object.keys(agrupado);
+  const valores = Object.values(agrupado);
   const total = valores.reduce((acc, val) => acc + val, 0);
   const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
 
