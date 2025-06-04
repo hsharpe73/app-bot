@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -11,7 +11,9 @@ import {
   Legend,
 } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { Box } from '@mui/material';
+import { Box, Button, useMediaQuery } from '@mui/material';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend, ChartDataLabels);
 
@@ -52,6 +54,9 @@ const agruparDatos = (etiquetas, valores) => {
 };
 
 const InformeChart = ({ data }) => {
+  const chartRef = useRef(null);
+  const isMobile = useMediaQuery('(max-width:600px)');
+
   if (!data || !data.length) return null;
 
   const primeraFila = data[0];
@@ -132,24 +137,45 @@ const InformeChart = ({ data }) => {
       },
       datalabels: tipoGrafico === 'pie' ? {
         color: '#fff',
+        align: 'center',
+        anchor: 'center',
         formatter: (value) => {
           const porcentaje = ((value / total) * 100).toFixed(1);
           return `${formatCLP(value)} (${porcentaje}%)`;
         },
         font: {
           weight: 'bold',
-          size: 14,
+          size: isMobile ? 10 : 14,
         },
       } : null,
     },
   };
 
-  return tipoGrafico === 'pie' ? (
-    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 3 }}>
-      <Pie data={chartData} options={options} />
+  const exportarPDF = async () => {
+    const chartCanvas = chartRef.current;
+    const canvas = chartCanvas.querySelector('canvas');
+    const image = await html2canvas(canvas);
+    const imgData = image.toDataURL('image/png');
+    const pdf = new jsPDF({ orientation: 'landscape' });
+    const width = pdf.internal.pageSize.getWidth();
+    const height = (image.height * width) / image.width;
+    pdf.addImage(imgData, 'PNG', 10, 10, width - 20, height);
+    pdf.save('informe-grafico.pdf');
+  };
+
+  return (
+    <Box sx={{ maxWidth: isMobile ? '100%' : 600, mx: 'auto', mt: 3 }} ref={chartRef}>
+      {tipoGrafico === 'pie' ? (
+        <Pie data={chartData} options={options} />
+      ) : (
+        <Bar data={chartData} options={options} />
+      )}
+      <Box sx={{ textAlign: 'center', mt: 2 }}>
+        <Button variant="contained" color="primary" onClick={exportarPDF}>
+          Descargar PDF
+        </Button>
+      </Box>
     </Box>
-  ) : (
-    <Bar data={chartData} options={options} />
   );
 };
 
