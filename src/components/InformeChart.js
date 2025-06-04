@@ -50,7 +50,6 @@ const InformeChart = ({ data }) => {
   const isMobile = useMediaQuery('(max-width:600px)');
 
   const rawData = Array.isArray(data) ? (data[0]?.rows || data[0]?.resultados || data) : [];
-
   if (!rawData || !rawData.length) return null;
 
   const primeraFila = rawData[0];
@@ -71,7 +70,7 @@ const InformeChart = ({ data }) => {
       const columnasNumericas = columnas.filter(k => {
         const val = parseFloat(primeraFila[k]);
         const key = normaliza(k);
-        return !isNaN(val) && val > 0 && key !== 'id' && key !== 'mes';
+        return !isNaN(val) && val > 0 && key !== 'id';
       });
 
       const preferida = posiblesValores
@@ -87,11 +86,8 @@ const InformeChart = ({ data }) => {
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
   const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
 
-  // Buscar posible nombre de cliente si la etiqueta es el mes
-  const nombreClienteKey = columnas.find(k =>
-    k !== etiquetaKey && k !== valorKey &&
-    (normaliza(k).includes('cliente') || normaliza(k).includes('nombre'))
-  );
+  const mesKey = columnas.find(k => normaliza(k) === 'mes');
+  const clienteKey = columnas.find(k => k !== mesKey && normaliza(k).includes('cliente'));
 
   const etiquetas = [];
   const valores = [];
@@ -99,14 +95,13 @@ const InformeChart = ({ data }) => {
   rawData.forEach(r => {
     const valor = parseFloat(r[valorKey]) || 0;
 
-    let etiqueta = r[etiquetaKey]?.toString() || 'Sin nombre';
-    if (etiquetaKey.toLowerCase().includes('mes')) {
-      etiqueta = nombreMes(r[etiquetaKey]);
+    let mes = r[mesKey];
+    if (mesKey && /^[0-9]+$/.test(mes)) {
+      mes = nombreMes(mes);
     }
 
-    if (nombreClienteKey && r[nombreClienteKey]) {
-      etiqueta += ` (${r[nombreClienteKey]})`;
-    }
+    const cliente = r[clienteKey]?.toString() || 'Sin cliente';
+    const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente;
 
     etiquetas.push(etiqueta);
     valores.push(valor);
