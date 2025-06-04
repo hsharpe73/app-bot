@@ -148,7 +148,7 @@ const InformeChart = ({ data }) => {
         },
         font: {
           weight: 'bold',
-          size: isMobile ? 10 : 13,
+          size: isMobile ? 9 : 12,
         },
       } : null,
     },
@@ -157,12 +157,10 @@ const InformeChart = ({ data }) => {
   const exportarPDF = async () => {
     const chartCanvas = chartRef.current;
     const canvas = chartCanvas.querySelector('canvas');
-    const image = await html2canvas(canvas);
+    const image = await html2canvas(canvas, { scale: 1.2 });
     const imgData = image.toDataURL('image/png');
-    const pdf = new jsPDF({ orientation: 'landscape' });
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (image.height * width) / image.width;
-    pdf.addImage(imgData, 'PNG', 10, 10, width - 20, height);
+    const pdf = new jsPDF({ orientation: 'portrait' });
+    pdf.addImage(imgData, 'PNG', 20, 20, 160, 120); // tamaño ajustado
     pdf.save('informe-grafico.pdf');
   };
 
@@ -172,10 +170,15 @@ const InformeChart = ({ data }) => {
       marginTop: 3,
       borderRadius: 3,
       backgroundColor: '#fff',
-      maxWidth: isMobile ? '100%' : 500,
+      maxWidth: isMobile ? '100%' : 420,
       mx: 'auto',
     }}>
-      <Box ref={chartRef} sx={{ position: 'relative', padding: 1 }}>
+      <Box ref={chartRef} sx={{
+        position: 'relative',
+        padding: 1,
+        width: isMobile ? 300 : 360,
+        mx: 'auto'
+      }}>
         {tipoGrafico === 'pie' ? (
           <Pie data={chartData} options={options} />
         ) : (
