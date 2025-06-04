@@ -85,7 +85,6 @@ const InformeChart = ({ data }) => {
 
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
   const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
-
   const mesKey = columnas.find(k => normaliza(k) === 'mes');
   const clienteKey = columnas.find(k => k !== mesKey && normaliza(k).includes('cliente'));
 
@@ -100,7 +99,11 @@ const InformeChart = ({ data }) => {
       mes = nombreMes(mes);
     }
 
-    const cliente = r[clienteKey]?.toString() || 'Sin cliente';
+    let cliente = r[clienteKey];
+    if (!cliente && etiquetaKey && normaliza(etiquetaKey).includes('mes')) {
+      cliente = 'Cliente fijo';
+    }
+
     const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente || mes || 'Sin nombre';
 
     etiquetas.push(etiqueta);
@@ -133,11 +136,7 @@ const InformeChart = ({ data }) => {
       legend: {
         display: true,
         position: tipoGrafico === 'pie' ? 'bottom' : 'top',
-        labels: {
-          font: {
-            size: isMobile ? 9 : 12,
-          },
-        },
+        labels: { font: { size: isMobile ? 9 : 12 } },
       },
       title: {
         display: true,
@@ -172,7 +171,7 @@ const InformeChart = ({ data }) => {
         },
         font: {
           weight: 'bold',
-          size: isMobile ? 8 : 10,
+          size: isMobile ? 8 : 11,
         },
       },
     },
@@ -217,9 +216,8 @@ const InformeChart = ({ data }) => {
         ref={chartRef}
         sx={{
           width: '100%',
-          maxWidth: isMobile ? '100%' : 700,
           height: isMobile ? 250 : 300,
-          margin: 'auto',
+          minWidth: isMobile ? '100%' : 600,
         }}
       >
         {tipoGrafico === 'pie' ? (
