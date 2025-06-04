@@ -105,7 +105,6 @@ const InformeChart = ({ data }) => {
     }
 
     const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente || mes || 'Sin nombre';
-
     etiquetas.push(etiqueta);
     valores.push(valor);
   });
@@ -133,16 +132,16 @@ const InformeChart = ({ data }) => {
     responsive: true,
     maintainAspectRatio: false,
     layout: {
-      padding: {
-        right: isMobile ? 0 : 10,
-        left: isMobile ? 0 : 10,
-      }
+      padding: { left: 10, right: 10, top: 10, bottom: 10 }
     },
     plugins: {
       legend: {
         display: true,
         position: tipoGrafico === 'pie' ? 'bottom' : 'top',
-        labels: { font: { size: isMobile ? 9 : 12 } },
+        labels: {
+          font: { size: isMobile ? 9 : 12 },
+          padding: 12,
+        },
       },
       title: {
         display: true,
@@ -173,7 +172,8 @@ const InformeChart = ({ data }) => {
         formatter: (value, ctx) => {
           const label = ctx.chart.data.labels[ctx.dataIndex] || '';
           const porcentaje = ((value / total) * 100).toFixed(1);
-          return `${label}\n${formatCLP(value)} (${porcentaje}%)`;
+          const line1 = label.length > 20 ? label.slice(0, 20) + '…' : label;
+          return `${line1}\n${formatCLP(value)} (${porcentaje}%)`;
         },
         font: {
           weight: 'bold',
@@ -222,9 +222,10 @@ const InformeChart = ({ data }) => {
         ref={chartRef}
         sx={{
           width: '100%',
-          maxWidth: '100%',
-          height: isMobile ? 250 : 300,
-          overflowX: 'auto',
+          height: isMobile ? 280 : 340,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
         }}
       >
         {tipoGrafico === 'pie' ? (
