@@ -23,6 +23,7 @@ import axios from 'axios';
 import Lottie from 'lottie-react';
 import * as XLSX from 'xlsx';
 import botAnimation from '../assets/bot.json';
+import InformeChart from './components/InformeChart';
 
 const WEBHOOK_URL = 'https://sharpe-asistente-app.app.n8n.cloud/webhook/consulta-ventas-v3';
 
@@ -307,16 +308,21 @@ const ChatBot = () => {
           </Stack>
         </Box>
 
-        {informeData && (
-          <Box sx={{ mt: 3, p: 2, backgroundColor: '#ffffffee', borderRadius: 2, border: '1px solid #ccc' }}>
-            <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
-              Pregunta: {informeData.pregunta}
-            </Typography>
-            <Button onClick={descargarExcel} variant="outlined" color="success" sx={{ mt: 2 }}>
-              Descargar Excel
-            </Button>
-          </Box>
-        )}
+            {informeData && (
+  <Box sx={{ mt: 3, p: 2, backgroundColor: '#ffffffee', borderRadius: 2, border: '1px solid #ccc' }}>
+    <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+      Pregunta: {informeData.pregunta}
+    </Typography>
+    <Button onClick={descargarExcel} variant="outlined" color="success" sx={{ mt: 2 }}>
+      Descargar Excel
+    </Button>
+
+    <Box sx={{ mt: 4 }}>
+      <InformeChart data={informeData.resultados} />
+    </Box>
+  </Box>
+)}
+
 
         <Stack direction="row" spacing={1} mt={2} alignItems="center">
           <TextField
