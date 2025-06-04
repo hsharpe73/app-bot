@@ -50,7 +50,6 @@ const InformeChart = ({ data }) => {
   const isMobile = useMediaQuery('(max-width:600px)');
 
   const rawData = Array.isArray(data) ? (data[0]?.rows || data[0]?.resultados || data) : [];
-
   if (!rawData || !rawData.length) return null;
 
   const primeraFila = rawData[0];
@@ -89,8 +88,13 @@ const InformeChart = ({ data }) => {
 
   const agrupado = {};
   rawData.forEach(r => {
-    const nombre = etiquetaKey.toLowerCase().includes('mes') ? nombreMes(r[etiquetaKey]) : r[etiquetaKey]?.toString() || 'Sin nombre';
+    const base = etiquetaKey.toLowerCase().includes('mes') ? nombreMes(r[etiquetaKey]) : r[etiquetaKey]?.toString() || 'Sin nombre';
+    const otrasClaves = Object.keys(r).filter(k => k !== etiquetaKey);
+    const posibleNombre = otrasClaves.find(k => normaliza(k).includes('cliente') || normaliza(k).includes('nombre'));
+    const cliente = posibleNombre ? r[posibleNombre] : '';
+    const nombre = cliente ? `${base} (${cliente})` : base;
     const valor = parseFloat(r[valorKey]) || 0;
+
     if (agrupado[nombre]) {
       agrupado[nombre] += valor;
     } else {
@@ -126,9 +130,7 @@ const InformeChart = ({ data }) => {
         display: true,
         position: tipoGrafico === 'pie' ? 'bottom' : 'top',
         labels: {
-          font: {
-            size: isMobile ? 9 : 12,
-          },
+          font: { size: isMobile ? 9 : 12 },
         },
       },
       title: {
