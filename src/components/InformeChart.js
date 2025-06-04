@@ -57,7 +57,8 @@ const colores = [
   '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
   '#9966FF', '#FF9F40', '#8BC34A', '#E91E63',
   '#00ACC1', '#FF5722', '#9C27B0', '#CDDC39',
-  '#03A9F4', '#673AB7', '#F44336', '#009688'
+  '#03A9F4', '#673AB7', '#F44336', '#009688',
+  '#FFA726', '#BA68C8', '#81C784', '#64B5F6'
 ];
 
 const InformeChart = ({ data }) => {
@@ -125,6 +126,8 @@ const InformeChart = ({ data }) => {
         backgroundColor: etiquetas.map((_, i) => colores[i % colores.length]),
         borderRadius: 4,
         barThickness: 30,
+        categoryPercentage: 0.8,
+        barPercentage: 0.9,
       },
     ],
   };
@@ -146,6 +149,8 @@ const InformeChart = ({ data }) => {
         color: '#000',
         anchor: 'end',
         align: 'top',
+        clamp: true,
+        clip: true,
         formatter: (value) => formatCLP(value),
         font: {
           weight: 'bold',
@@ -176,6 +181,8 @@ const InformeChart = ({ data }) => {
       x: {
         ticks: {
           font: { size: isMobile ? 9 : 11 },
+          maxRotation: 45,
+          minRotation: 45,
         },
       },
     } : {},
