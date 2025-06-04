@@ -116,17 +116,36 @@ const InformeChart = ({ data }) => {
       {
         label: formateaTitulo(valorKey || 'Valores'),
         data: valores,
-        backgroundColor: [
-          '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40'
-        ],
+        backgroundColor: '#ff6384',
         borderColor: '#fff',
         borderWidth: 1,
+        barPercentage: 0.6,
+        categoryPercentage: 0.6,
       },
     ],
   };
 
   const options = {
     responsive: true,
+    indexAxis: tipoGrafico === 'bar' ? 'x' : undefined,
+    scales: tipoGrafico === 'bar' ? {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          callback: value => formatCLP(value),
+          font: {
+            size: isMobile ? 9 : 11,
+          }
+        }
+      },
+      x: {
+        ticks: {
+          font: {
+            size: isMobile ? 9 : 11,
+          }
+        }
+      }
+    } : {},
     plugins: {
       legend: { display: true },
       title: {
@@ -138,11 +157,20 @@ const InformeChart = ({ data }) => {
           size: isMobile ? 14 : 18
         }
       },
-      datalabels: tipoGrafico === 'pie' ? {
+      datalabels: tipoGrafico === 'bar' ? {
+        color: '#000',
+        anchor: 'end',
+        align: 'top',
+        formatter: (value) => formatCLP(value),
+        font: {
+          weight: 'bold',
+          size: isMobile ? 9 : 11,
+        }
+      } : tipoGrafico === 'pie' ? {
         color: '#fff',
         align: 'center',
         anchor: 'center',
-        clamp: true, // fuerza que el texto no se salga del sector
+        clamp: true,
         formatter: (value) => {
           const porcentaje = ((value / total) * 100).toFixed(1);
           return `${formatCLP(value)} (${porcentaje}%)`;
@@ -158,7 +186,7 @@ const InformeChart = ({ data }) => {
   const exportarPDF = async () => {
     const chartCanvas = chartRef.current;
     const canvas = chartCanvas.querySelector('canvas');
-    const image = await html2canvas(canvas, { scale: 1.2 });
+    const image = await html2canvas(canvas, { scale: 1.5 });
     const imgData = image.toDataURL('image/png');
     const pdf = new jsPDF({ orientation: 'portrait' });
     pdf.addImage(imgData, 'PNG', 20, 20, 160, 120);
@@ -171,13 +199,13 @@ const InformeChart = ({ data }) => {
       marginTop: 3,
       borderRadius: 3,
       backgroundColor: '#fff',
-      maxWidth: isMobile ? '100%' : 420,
+      maxWidth: isMobile ? '100%' : 520,
       mx: 'auto',
     }}>
       <Box ref={chartRef} sx={{
         position: 'relative',
         padding: 1,
-        width: isMobile ? 300 : 360,
+        width: isMobile ? 320 : 480,
         mx: 'auto'
       }}>
         {tipoGrafico === 'pie' ? (
