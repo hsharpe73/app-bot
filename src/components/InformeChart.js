@@ -26,7 +26,7 @@ const InformeChart = ({ data }) => {
   const etiquetas = data.map(r => r[etiquetaKey]?.toString() || 'Sin nombre');
   const valores = data.map(r => parseFloat(r[valorKey]) || 0);
 
-  // Si hay muchas etiquetas únicas o valores variados → gráfico de barras. Si hay pocas categorías → gráfico de torta
+  
   const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
 
   const chartData = {
