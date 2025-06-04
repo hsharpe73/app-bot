@@ -119,7 +119,9 @@ const InformeChart = ({ data }) => {
       {
         label: formateaTitulo(valorKey || 'Valores'),
         data: valores,
-        backgroundColor: etiquetas.map((_, i) => colores[i % colores.length]),
+        backgroundColor: tipoGrafico === 'bar'
+          ? etiquetas.map((_, i) => colores[i % colores.length])
+          : colores,
         borderRadius: 4,
         barThickness: 30,
         categoryPercentage: 0.8,
