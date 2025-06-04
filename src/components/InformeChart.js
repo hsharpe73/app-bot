@@ -105,7 +105,6 @@ const InformeChart = ({ data }) => {
     }
 
     const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente || mes || 'Sin nombre';
-
     etiquetas.push(etiqueta);
     valores.push(valor);
   });
@@ -120,7 +119,9 @@ const InformeChart = ({ data }) => {
       {
         label: formateaTitulo(valorKey || 'Valores'),
         data: valores,
-        backgroundColor: etiquetas.map((_, i) => colores[i % colores.length]),
+        backgroundColor: tipoGrafico === 'bar'
+          ? etiquetas.map((_, i) => colores[i % colores.length])
+          : colores,
         borderRadius: 4,
         barThickness: 30,
         categoryPercentage: 0.8,
@@ -132,11 +133,17 @@ const InformeChart = ({ data }) => {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: 10,
+    },
     plugins: {
       legend: {
         display: true,
         position: tipoGrafico === 'pie' ? 'bottom' : 'top',
-        labels: { font: { size: isMobile ? 9 : 12 } },
+        labels: {
+          font: { size: isMobile ? 9 : 12 },
+          padding: 12,
+        },
       },
       title: {
         display: true,
@@ -167,7 +174,8 @@ const InformeChart = ({ data }) => {
         formatter: (value, ctx) => {
           const label = ctx.chart.data.labels[ctx.dataIndex] || '';
           const porcentaje = ((value / total) * 100).toFixed(1);
-          return `${label}\n${formatCLP(value)} (${porcentaje}%)`;
+          const line1 = label.length > 20 ? label.slice(0, 20) + '…' : label;
+          return `${line1}\n${formatCLP(value)} (${porcentaje}%)`;
         },
         font: {
           weight: 'bold',
@@ -210,20 +218,27 @@ const InformeChart = ({ data }) => {
       borderRadius: 3,
       backgroundColor: '#fff',
       width: '100%',
+      maxWidth: '100%',
       overflowX: 'auto',
     }}>
       <Box
         ref={chartRef}
         sx={{
           width: '100%',
-          height: isMobile ? 250 : 300,
-          minWidth: isMobile ? '100%' : 600,
+          maxWidth: '100%',
+          height: tipoGrafico === 'pie' ? (isMobile ? 280 : 340) : 'auto',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          overflowX: 'auto'
         }}
       >
         {tipoGrafico === 'pie' ? (
           <Pie data={chartData} options={options} />
         ) : (
-          <Bar data={chartData} options={options} />
+          <Box sx={{ minWidth: isMobile ? 360 : 600, width: '100%' }}>
+            <Bar data={chartData} options={options} />
+          </Box>
         )}
       </Box>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
