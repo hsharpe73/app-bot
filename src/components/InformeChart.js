@@ -50,6 +50,7 @@ const InformeChart = ({ data }) => {
   const isMobile = useMediaQuery('(max-width:600px)');
 
   const rawData = Array.isArray(data) ? (data[0]?.rows || data[0]?.resultados || data) : [];
+
   if (!rawData || !rawData.length) return null;
 
   const primeraFila = rawData[0];
@@ -86,24 +87,31 @@ const InformeChart = ({ data }) => {
   const etiquetaKey = encontrarColumna(posiblesEtiquetas, 'texto');
   const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
 
-  const agrupado = {};
+  // Buscar posible nombre de cliente si la etiqueta es el mes
+  const nombreClienteKey = columnas.find(k =>
+    k !== etiquetaKey && k !== valorKey &&
+    (normaliza(k).includes('cliente') || normaliza(k).includes('nombre'))
+  );
+
+  const etiquetas = [];
+  const valores = [];
+
   rawData.forEach(r => {
-    const base = etiquetaKey.toLowerCase().includes('mes') ? nombreMes(r[etiquetaKey]) : r[etiquetaKey]?.toString() || 'Sin nombre';
-    const otrasClaves = Object.keys(r).filter(k => k !== etiquetaKey);
-    const posibleNombre = otrasClaves.find(k => normaliza(k).includes('cliente') || normaliza(k).includes('nombre'));
-    const cliente = posibleNombre ? r[posibleNombre] : '';
-    const nombre = cliente ? `${base} (${cliente})` : base;
     const valor = parseFloat(r[valorKey]) || 0;
 
-    if (agrupado[nombre]) {
-      agrupado[nombre] += valor;
-    } else {
-      agrupado[nombre] = valor;
+    let etiqueta = r[etiquetaKey]?.toString() || 'Sin nombre';
+    if (etiquetaKey.toLowerCase().includes('mes')) {
+      etiqueta = nombreMes(r[etiquetaKey]);
     }
+
+    if (nombreClienteKey && r[nombreClienteKey]) {
+      etiqueta += ` (${r[nombreClienteKey]})`;
+    }
+
+    etiquetas.push(etiqueta);
+    valores.push(valor);
   });
 
-  const etiquetas = Object.keys(agrupado);
-  const valores = Object.values(agrupado);
   const total = valores.reduce((acc, val) => acc + val, 0);
   const tipoGrafico = etiquetas.length <= 4 ? 'pie' : 'bar';
 
@@ -130,7 +138,9 @@ const InformeChart = ({ data }) => {
         display: true,
         position: tipoGrafico === 'pie' ? 'bottom' : 'top',
         labels: {
-          font: { size: isMobile ? 9 : 12 },
+          font: {
+            size: isMobile ? 9 : 12,
+          },
         },
       },
       title: {
@@ -160,7 +170,7 @@ const InformeChart = ({ data }) => {
         color: '#fff',
         align: 'center',
         anchor: 'center',
-        formatter: (value) => {
+        formatter: (value, ctx) => {
           const porcentaje = ((value / total) * 100).toFixed(1);
           return `${formatCLP(value)} (${porcentaje}%)`;
         },
