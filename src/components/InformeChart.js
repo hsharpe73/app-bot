@@ -100,11 +100,7 @@ const InformeChart = ({ data }) => {
       mes = nombreMes(mes);
     }
 
-    let cliente = r[clienteKey];
-    if (!cliente && etiquetaKey && normaliza(etiquetaKey).includes('mes')) {
-      cliente = 'Cliente fijo';
-    }
-
+    const cliente = r[clienteKey]?.toString() || 'Sin cliente';
     const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente || mes || 'Sin nombre';
 
     etiquetas.push(etiqueta);
@@ -176,7 +172,7 @@ const InformeChart = ({ data }) => {
         },
         font: {
           weight: 'bold',
-          size: isMobile ? 8 : 11,
+          size: isMobile ? 8 : 10,
         },
       },
     },
@@ -217,7 +213,15 @@ const InformeChart = ({ data }) => {
       width: '100%',
       overflowX: 'auto',
     }}>
-      <Box ref={chartRef} sx={{ minWidth: 600, height: 300 }}>
+      <Box
+        ref={chartRef}
+        sx={{
+          width: '100%',
+          maxWidth: isMobile ? '100%' : 700,
+          height: isMobile ? 250 : 300,
+          margin: 'auto',
+        }}
+      >
         {tipoGrafico === 'pie' ? (
           <Pie data={chartData} options={options} />
         ) : (
