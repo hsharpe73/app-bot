@@ -17,23 +17,26 @@ const InformeChart = ({ data }) => {
   if (!data || !data.length) return null;
 
   const posiblesEtiquetas = ['cliente', 'nombre_cliente', 'categoria_doc', 'direccion_destino'];
-  const posiblesValores = ['total', 'monto', 'saldo', 'neto', 'iva'];
 
   const primeraFila = data[0];
   const etiquetaKey = posiblesEtiquetas.find(k => k in primeraFila) || Object.keys(primeraFila)[0];
-  const valorKey = posiblesValores.find(k => k in primeraFila) || Object.keys(primeraFila).find(k => typeof primeraFila[k] === 'number');
+
+  // Buscar valorKey de forma dinámica (que sea un número válido)
+  const valorKey = Object.keys(primeraFila).find(k => {
+    const val = parseFloat(primeraFila[k]);
+    return !isNaN(val) && val > 0;
+  });
 
   const etiquetas = data.map(r => r[etiquetaKey]?.toString() || 'Sin nombre');
   const valores = data.map(r => parseFloat(r[valorKey]) || 0);
 
-  
   const tipoGrafico = etiquetas.length <= 6 ? 'pie' : 'bar';
 
   const chartData = {
     labels: etiquetas,
     datasets: [
       {
-        label: valorKey,
+        label: valorKey || "Valores",
         data: valores,
         backgroundColor: [
           '#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0', '#9966ff', '#ff9f40'
