@@ -1,17 +1,20 @@
 {
-  "name": "Agente-Optimus",
   "short_name": "Optimus",
-  "description": "Tu asistente de ventas inteligente",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#E6CCFF",
-  "theme_color": "#B57EDC",
-  "orientation": "portrait",
+  "name": "Agente Optimus",
   "icons": [
     {
-      "src": "icons/robot-v2.png",
+      "src": "icons/robot.png",
       "sizes": "192x192",
       "type": "image/png"
+    },
+    {
+      "src": "icons/robot.png",
+      "sizes": "512x512",
+      "type": "image/png"
     }
-  ]
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
 }
