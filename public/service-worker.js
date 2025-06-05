@@ -1,9 +1,9 @@
-const CACHE_NAME = 'agente-optimus-cache-v2';
+const CACHE_NAME = 'agente-optimus-cache-v3';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/icons/robot.png',
+  '/icons/robot-v2.png',
 ];
 
 
