@@ -8,26 +8,30 @@ import {
   Typography
 } from '@mui/material';
 
-const CURRENT_VERSION = '1.0.2';
-
 const VersionChecker = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    fetch(`/version.json?v=${Date.now()}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data.version && data.version !== CURRENT_VERSION) {
-          setOpen(true);
-        }
-      })
-      .catch(err => {
-        console.error('No se pudo verificar la versión', err);
-      });
+    const handleNewVersion = () => {
+      setOpen(true);
+    };
+
+    window.addEventListener('new-version-available', handleNewVersion);
+
+    return () => {
+      window.removeEventListener('new-version-available', handleNewVersion);
+    };
   }, []);
 
   const handleUpdate = () => {
-    window.location.reload(true);
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(reg => reg.unregister());
+        window.location.reload(true);
+      });
+    } else {
+      window.location.reload(true);
+    }
   };
 
   return (
