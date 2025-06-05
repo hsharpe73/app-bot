@@ -148,6 +148,7 @@ const InformeChart = ({ data }) => {
       datalabels: tipoGrafico === 'bar' ? {
         display: (ctx) => {
           const value = ctx.dataset.data[ctx.dataIndex];
+          if (isMobile && etiquetas.length > 10) return false;
           return value === maxValor || value > 10000000;
         },
         color: '#000',
@@ -158,7 +159,7 @@ const InformeChart = ({ data }) => {
         formatter: (value) => formatCLP(value),
         font: {
           weight: 'bold',
-          size: etiquetas.length > 10 ? 7 : isMobile ? 8 : 10,
+          size: etiquetas.length > 10 ? (isMobile ? 6 : 7) : isMobile ? 8 : 10,
         },
       } : {
         color: '#fff',
@@ -185,9 +186,13 @@ const InformeChart = ({ data }) => {
       },
       x: {
         ticks: {
-          font: { size: etiquetas.length > 10 ? 7 : isMobile ? 9 : 11 },
-          maxRotation: 45,
-          minRotation: 45,
+          font: {
+            size: etiquetas.length > 10
+              ? (isMobile ? 6 : 8)
+              : isMobile ? 9 : 11,
+          },
+          maxRotation: isMobile && etiquetas.length > 10 ? 60 : 45,
+          minRotation: isMobile && etiquetas.length > 10 ? 60 : 45,
           autoSkip: false,
         },
       },
@@ -216,8 +221,10 @@ const InformeChart = ({ data }) => {
       <Box
         ref={chartRef}
         sx={{
-          width: etiquetas.length > 10 ? etiquetas.length * 80 : '100%',
-          height: isMobile ? 250 : 300,
+          width: etiquetas.length > 10
+            ? (isMobile ? etiquetas.length * 90 : etiquetas.length * 80)
+            : '100%',
+          height: isMobile ? 320 : 300,
           minWidth: isMobile ? '100%' : 600,
         }}
       >
