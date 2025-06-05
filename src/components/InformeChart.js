@@ -216,26 +216,20 @@ const InformeChart = ({ data }) => {
       borderRadius: 3,
       backgroundColor: '#fff',
       width: '100%',
+      overflowX: 'auto', // ✅ necesario para móvil
     }}>
       <Box
+        ref={chartRef}
         sx={{
-          overflowX: etiquetas.length > 10 && isMobile ? 'auto' : 'visible',
+          height: isMobile ? 320 : 300,
+          minWidth: isMobile && etiquetas.length > 10 ? etiquetas.length * 90 : '100%',
         }}
       >
-        <Box
-          ref={chartRef}
-          sx={{
-            width: etiquetas.length > 10 && isMobile ? etiquetas.length * 90 : '100%',
-            height: isMobile ? 320 : 300,
-            minWidth: 600,
-          }}
-        >
-          {tipoGrafico === 'pie' ? (
-            <Pie data={chartData} options={options} />
-          ) : (
-            <Bar data={chartData} options={options} />
-          )}
-        </Box>
+        {tipoGrafico === 'pie' ? (
+          <Pie data={chartData} options={options} />
+        ) : (
+          <Bar data={chartData} options={options} />
+        )}
       </Box>
 
       <Box sx={{ textAlign: 'center', mt: 2 }}>
