@@ -2,7 +2,7 @@
   "name": "Agente-Optimus",
   "short_name": "Optimus",
   "description": "Tu asistente de ventas inteligente",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#E6CCFF",
   "theme_color": "#B57EDC",
