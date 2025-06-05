@@ -122,8 +122,8 @@ const InformeChart = ({ data }) => {
         data: valores,
         backgroundColor: etiquetas.map((_, i) => colores[i % colores.length]),
         borderRadius: 4,
-        barThickness: 30,
-        categoryPercentage: 0.8,
+        barThickness: etiquetas.length > 10 ? 16 : 30,
+        categoryPercentage: etiquetas.length > 10 ? 0.6 : 0.8,
         barPercentage: 0.9,
       },
     ],
@@ -188,6 +188,7 @@ const InformeChart = ({ data }) => {
           font: { size: etiquetas.length > 10 ? 7 : isMobile ? 9 : 11 },
           maxRotation: 45,
           minRotation: 45,
+          autoSkip: false,
         },
       },
     } : {},
@@ -215,7 +216,7 @@ const InformeChart = ({ data }) => {
       <Box
         ref={chartRef}
         sx={{
-          width: '100%',
+          width: etiquetas.length > 10 ? etiquetas.length * 80 : '100%',
           height: isMobile ? 250 : 300,
           minWidth: isMobile ? '100%' : 600,
         }}
@@ -245,4 +246,3 @@ const InformeChart = ({ data }) => {
 };
 
 export default InformeChart;
-
