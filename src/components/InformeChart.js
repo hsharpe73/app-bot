@@ -216,20 +216,20 @@ const InformeChart = ({ data }) => {
       borderRadius: 3,
       backgroundColor: '#fff',
       width: '100%',
-      overflowX: 'auto',
     }}>
       <Box
-        ref={chartRef}
         sx={{
-          height: isMobile ? 320 : 300,
-          minWidth: isMobile && etiquetas.length > 10 ? etiquetas.length * 90 : '100%',
-          overflowX: isMobile && etiquetas.length > 10 ? 'scroll' : 'visible',
+          overflowX: etiquetas.length > 10 && isMobile ? 'auto' : 'visible',
         }}
       >
-        <Box sx={{
-          width: isMobile && etiquetas.length > 10 ? etiquetas.length * 90 : '100%',
-          minWidth: 600,
-        }}>
+        <Box
+          ref={chartRef}
+          sx={{
+            width: etiquetas.length > 10 && isMobile ? etiquetas.length * 90 : '100%',
+            height: isMobile ? 320 : 300,
+            minWidth: 600,
+          }}
+        >
           {tipoGrafico === 'pie' ? (
             <Pie data={chartData} options={options} />
           ) : (
@@ -237,6 +237,7 @@ const InformeChart = ({ data }) => {
           )}
         </Box>
       </Box>
+
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button
           variant="contained"
