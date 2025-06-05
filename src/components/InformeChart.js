@@ -221,18 +221,21 @@ const InformeChart = ({ data }) => {
       <Box
         ref={chartRef}
         sx={{
-          width: etiquetas.length > 10
-            ? (isMobile ? etiquetas.length * 90 : etiquetas.length * 80)
-            : '100%',
           height: isMobile ? 320 : 300,
-          minWidth: isMobile ? '100%' : 600,
+          minWidth: isMobile && etiquetas.length > 10 ? etiquetas.length * 90 : '100%',
+          overflowX: isMobile && etiquetas.length > 10 ? 'scroll' : 'visible',
         }}
       >
-        {tipoGrafico === 'pie' ? (
-          <Pie data={chartData} options={options} />
-        ) : (
-          <Bar data={chartData} options={options} />
-        )}
+        <Box sx={{
+          width: isMobile && etiquetas.length > 10 ? etiquetas.length * 90 : '100%',
+          minWidth: 600,
+        }}>
+          {tipoGrafico === 'pie' ? (
+            <Pie data={chartData} options={options} />
+          ) : (
+            <Bar data={chartData} options={options} />
+          )}
+        </Box>
       </Box>
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button
