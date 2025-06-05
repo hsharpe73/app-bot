@@ -3,12 +3,12 @@
   "name": "Agente Optimus",
   "icons": [
     {
-      "src": "icons/robot.png",
+      "src": "icons/optimus.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icons/robot.png",
+      "src": "icons/optimus.png",
       "sizes": "512x512",
       "type": "image/png"
     }
