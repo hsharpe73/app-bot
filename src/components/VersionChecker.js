@@ -8,7 +8,7 @@ import {
   Typography
 } from '@mui/material';
 
-const CURRENT_VERSION = '1.0.0';
+const CURRENT_VERSION = '1.0.1';
 
 const VersionChecker = () => {
   const [open, setOpen] = useState(false);
