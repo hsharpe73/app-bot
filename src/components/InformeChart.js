@@ -87,6 +87,7 @@ const InformeChart = ({ data }) => {
   const valorKey = columnas.includes('total') ? 'total' : encontrarColumna(posiblesValores, 'numero');
   const mesKey = columnas.find(k => normaliza(k) === 'mes');
   const clienteKey = columnas.find(k => k !== mesKey && normaliza(k).includes('cliente'));
+  const diasKey = columnas.find(k => normaliza(k).includes('dias'));
 
   const etiquetas = [];
   const valores = [];
@@ -105,7 +106,6 @@ const InformeChart = ({ data }) => {
     }
 
     const etiqueta = mes && cliente ? `${mes} (${cliente})` : cliente || mes || 'Sin nombre';
-
     etiquetas.push(etiqueta);
     valores.push(valor);
   });
@@ -149,14 +149,19 @@ const InformeChart = ({ data }) => {
         display: (ctx) => {
           const value = ctx.dataset.data[ctx.dataIndex];
           if (isMobile && etiquetas.length > 10) return false;
-          return value === maxValor || value > 10000000;
+          return value > 0;
         },
         color: '#000',
         anchor: 'end',
         align: 'top',
         clamp: true,
         clip: true,
-        formatter: (value) => formatCLP(value),
+        formatter: (value, ctx) => {
+          const raw = rawData[ctx.dataIndex];
+          const dias = raw?.dias_atraso || raw?.dias || raw?.atraso || null;
+          const textoDias = dias ? `\n${dias} días` : '';
+          return `${formatCLP(value)}${textoDias}`;
+        },
         font: {
           weight: 'bold',
           size: etiquetas.length > 10 ? (isMobile ? 6 : 7) : isMobile ? 8 : 10,
@@ -216,7 +221,7 @@ const InformeChart = ({ data }) => {
       borderRadius: 3,
       backgroundColor: '#fff',
       width: '100%',
-      overflowX: 'auto', // ✅ necesario para móvil
+      overflowX: 'auto',
     }}>
       <Box
         ref={chartRef}
@@ -231,7 +236,6 @@ const InformeChart = ({ data }) => {
           <Bar data={chartData} options={options} />
         )}
       </Box>
-
       <Box sx={{ textAlign: 'center', mt: 2 }}>
         <Button
           variant="contained"
