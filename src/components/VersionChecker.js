@@ -8,13 +8,13 @@ import {
   Typography
 } from '@mui/material';
 
-const CURRENT_VERSION = '1.0.1';
+const CURRENT_VERSION = '1.0.2';
 
 const VersionChecker = () => {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/version.json', { cache: 'no-store' })
+    fetch(`/version.json?v=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
         if (data.version && data.version !== CURRENT_VERSION) {
