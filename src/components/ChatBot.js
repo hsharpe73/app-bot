@@ -356,11 +356,8 @@ const ChatBot = () => {
           sx={{ mt: 2 }}
         />
 
-        <Dialog open={modalAbierto} onClose={() => setModalAbierto(false)}>
-          <Box sx={{ p: 3, minWidth: 350 }}>
-            <UploadExcel />
-          </Box>
-        </Dialog>
+        <UploadExcel open={modalAbierto} onClose={() => setModalAbierto(false)} />
+
       </Paper>
     </Box>
   );
