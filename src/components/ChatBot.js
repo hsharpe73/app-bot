@@ -24,6 +24,7 @@ import Lottie from 'lottie-react';
 import * as XLSX from 'xlsx';
 import botAnimation from '../assets/bot.json';
 import InformeChart from './InformeChart';
+import UploadExcel from './UploadExcel';
 
 
 const WEBHOOK_URL = 'https://app-bot.app.n8n.cloud/webhook/consulta-ventas-v3';
@@ -360,6 +361,10 @@ const ChatBot = () => {
           label="Voz activa"
           sx={{ mt: 2 }}
         />
+      <Box sx={{ mt: 4 }}>
+          <UploadExcel />
+        </Box>
+      
       </Paper>
     </Box>
   );
