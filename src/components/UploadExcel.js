@@ -4,6 +4,8 @@ import {
   Button,
   Typography,
   Stack,
+  Snackbar,
+  Alert,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -13,24 +15,21 @@ import {
   Fade,
   Chip,
   Zoom,
-  LinearProgress,
-  Backdrop,
-  Paper,
-  Alert
+  LinearProgress
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
-const WEBHOOK_EXCEL_URL = 'https://app-bot.app.n8n.cloud/webhook/excel-mensajes';
+const WEBHOOK_EXCEL_URL = 'https://app-bot.app.n8n.cloud/webhook/subir-excel';
 
 const UploadExcel = ({ open, onClose }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [message, setMessage] = useState('');
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState('info');
-  const [showAlert, setShowAlert] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState('info'); // 'success', 'error', 'info'
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
@@ -39,7 +38,9 @@ const UploadExcel = ({ open, onClose }) => {
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      showUserMessage('⚠️ Por favor selecciona un archivo Excel.', 'warning');
+      setMessage('⚠️ Por favor selecciona un archivo Excel.');
+      setUploadStatus('warning');
+      setSnackbarOpen(true);
       return;
     }
 
@@ -56,30 +57,18 @@ const UploadExcel = ({ open, onClose }) => {
         }
       });
 
-      const backendMessage = response?.data?.mensaje || '✅ Archivo subido exitosamente.';
-      const tipo =
-        backendMessage.includes('✅') && backendMessage.includes('⚠️') ? 'warning' :
-        backendMessage.includes('⚠️') ? 'warning' :
-        backendMessage.includes('❌') ? 'error' :
-        'success';
-
-      showUserMessage(backendMessage, tipo);
-
+      setMessage('✅ Archivo subido exitosamente.');
+      setUploadStatus('success');
       setSelectedFile(null);
       onClose();
     } catch (error) {
-      showUserMessage('❌ Error al subir el archivo. Intenta nuevamente.', 'error');
+      setMessage('❌ Error al subir el archivo. Intenta nuevamente.');
+      setUploadStatus('error');
     } finally {
       setUploading(false);
+      setSnackbarOpen(true);
       setUploadProgress(0);
     }
-  };
-
-  const showUserMessage = (text, severity) => {
-    setMessage(text);
-    setUploadStatus(severity);
-    setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
   };
 
   return (
@@ -209,13 +198,20 @@ const UploadExcel = ({ open, onClose }) => {
         </DialogActions>
       </Dialog>
 
-      <Backdrop open={showAlert} sx={{ zIndex: 1500, color: '#fff' }}>
-        <Paper elevation={4} sx={{ p: 2, minWidth: 400, borderRadius: 2 }}>
-          <Alert severity={uploadStatus} variant="filled" sx={{ fontSize: '1rem' }}>
-            {message}
-          </Alert>
-        </Paper>
-      </Backdrop>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={uploadStatus}
+          variant="filled"
+          onClose={() => setSnackbarOpen(false)}
+        >
+          {message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };
