@@ -57,8 +57,19 @@ const UploadExcel = ({ open, onClose }) => {
         }
       });
 
-      setMessage('✅ Archivo subido exitosamente.');
-      setUploadStatus('success');
+      const { status, mensaje, errores } = response.data;
+
+      if (status === 'ok') {
+        setMessage(`✅ ${mensaje}`);
+        setUploadStatus('success');
+      } else if (status === 'parcial') {
+        setMessage(`⚠️ ${mensaje}`);
+        setUploadStatus('warning');
+      } else {
+        setMessage(`❌ ${mensaje}\n${errores?.join('\n')}`);
+        setUploadStatus('error');
+      }
+
       setSelectedFile(null);
       onClose();
     } catch (error) {
