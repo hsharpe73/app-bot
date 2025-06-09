@@ -14,7 +14,8 @@ import {
   Tooltip,
   Fade,
   Chip,
-  Zoom
+  Zoom,
+  LinearProgress
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CloseIcon from '@mui/icons-material/Close';
@@ -26,33 +27,47 @@ const UploadExcel = ({ open, onClose }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [message, setMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState('info'); // 'success', 'error', 'info'
 
   const handleFileChange = (event) => {
     setSelectedFile(event.target.files[0]);
+    setUploadProgress(0);
   };
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setMessage('Por favor selecciona un archivo Excel.');
+      setMessage('⚠️ Por favor selecciona un archivo Excel.');
+      setUploadStatus('warning');
       setSnackbarOpen(true);
       return;
     }
 
     const formData = new FormData();
     formData.append('file', selectedFile);
+    setUploading(true);
 
     try {
       const response = await axios.post(WEBHOOK_EXCEL_URL, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percent);
+        }
       });
 
-      setMessage(response.data?.mensaje || 'Archivo procesado correctamente.');
+      setMessage('✅ Archivo subido exitosamente.');
+      setUploadStatus('success');
       setSelectedFile(null);
       onClose();
     } catch (error) {
-      setMessage('⚠️ Error al subir el archivo.');
+      setMessage('❌ Error al subir el archivo. Intenta nuevamente.');
+      setUploadStatus('error');
     } finally {
+      setUploading(false);
       setSnackbarOpen(true);
+      setUploadProgress(0);
     }
   };
 
@@ -60,7 +75,7 @@ const UploadExcel = ({ open, onClose }) => {
     <>
       <Dialog
         open={open}
-        onClose={onClose}
+        onClose={uploading ? null : onClose}
         maxWidth="sm"
         fullWidth
         TransitionComponent={Fade}
@@ -87,6 +102,7 @@ const UploadExcel = ({ open, onClose }) => {
             <IconButton
               aria-label="cerrar"
               onClick={onClose}
+              disabled={uploading}
               sx={{ color: 'grey.500' }}
             >
               <CloseIcon />
@@ -106,6 +122,7 @@ const UploadExcel = ({ open, onClose }) => {
                 variant="contained"
                 component="label"
                 startIcon={<UploadFileIcon />}
+                disabled={uploading}
                 sx={{
                   borderRadius: 2,
                   textTransform: 'none',
@@ -141,22 +158,29 @@ const UploadExcel = ({ open, onClose }) => {
             <Typography variant="caption" color="text.secondary">
               ✅ Solo se permiten archivos .xlsx o .xls
             </Typography>
+
+            {uploading && (
+              <LinearProgress
+                variant="determinate"
+                value={uploadProgress}
+                sx={{ mt: 1, borderRadius: 1 }}
+              />
+            )}
           </Stack>
         </DialogContent>
 
         <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={onClose} sx={{ textTransform: 'none' }}>
+          <Button onClick={onClose} disabled={uploading} sx={{ textTransform: 'none' }}>
             Cancelar
           </Button>
 
-          {/* Animación scale para el botón "Subir" */}
-          <Zoom in={!!selectedFile}>
+          <Zoom in={!!selectedFile && !uploading}>
             <span>
               <Button
                 onClick={handleUpload}
                 variant="contained"
                 color="success"
-                disabled={!selectedFile}
+                disabled={!selectedFile || uploading}
                 sx={{
                   textTransform: 'none',
                   fontWeight: 'bold',
@@ -181,7 +205,7 @@ const UploadExcel = ({ open, onClose }) => {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
         <Alert
-          severity="info"
+          severity={uploadStatus}
           variant="filled"
           onClose={() => setSnackbarOpen(false)}
         >
