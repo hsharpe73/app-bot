@@ -29,7 +29,7 @@ const UploadExcel = ({ open, onClose }) => {
   const [message, setMessage] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploadStatus, setUploadStatus] = useState('info'); // 'success', 'error', 'warning'
+  const [uploadStatus, setUploadStatus] = useState('info');
   const [showAlert, setShowAlert] = useState(false);
 
   const handleFileChange = (event) => {
@@ -58,9 +58,10 @@ const UploadExcel = ({ open, onClose }) => {
 
       const backendMessage = response?.data?.mensaje || '✅ Archivo subido exitosamente.';
       const tipo =
-        backendMessage.includes('✅') ? 'success' :
+        backendMessage.includes('✅') && backendMessage.includes('⚠️') ? 'warning' :
         backendMessage.includes('⚠️') ? 'warning' :
-        backendMessage.includes('❌') ? 'error' : 'info';
+        backendMessage.includes('❌') ? 'error' :
+        'success';
 
       showUserMessage(backendMessage, tipo);
 
@@ -78,7 +79,7 @@ const UploadExcel = ({ open, onClose }) => {
     setMessage(text);
     setUploadStatus(severity);
     setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 2500); // oculta después de 2.5s
+    setTimeout(() => setShowAlert(false), 3000);
   };
 
   return (
@@ -209,7 +210,7 @@ const UploadExcel = ({ open, onClose }) => {
       </Dialog>
 
       <Backdrop open={showAlert} sx={{ zIndex: 1500, color: '#fff' }}>
-        <Paper elevation={4} sx={{ p: 2, minWidth: 360, borderRadius: 2 }}>
+        <Paper elevation={4} sx={{ p: 2, minWidth: 400, borderRadius: 2 }}>
           <Alert severity={uploadStatus} variant="filled" sx={{ fontSize: '1rem' }}>
             {message}
           </Alert>
