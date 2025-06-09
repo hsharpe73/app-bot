@@ -57,8 +57,14 @@ const UploadExcel = ({ open, onClose }) => {
         }
       });
 
-      setMessage('✅ Archivo subido exitosamente.');
-      setUploadStatus('success');
+      const backendMessage = response?.data?.mensaje || '✅ Archivo subido exitosamente.';
+      setMessage(backendMessage);
+      setUploadStatus(
+        backendMessage.includes('✅') ? 'success' :
+        backendMessage.includes('⚠️') ? 'warning' :
+        backendMessage.includes('❌') ? 'error' : 'info'
+      );
+
       setSelectedFile(null);
       onClose();
     } catch (error) {
