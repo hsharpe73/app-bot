@@ -21,7 +21,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
-const WEBHOOK_EXCEL_URL = 'https://app-bot.app.n8n.cloud/webhook/subir-excel';
+const WEBHOOK_EXCEL_URL = 'https://app-bot.app.n8n.cloud/webhook/excel-mensajes';
 
 const UploadExcel = ({ open, onClose }) => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -57,19 +57,8 @@ const UploadExcel = ({ open, onClose }) => {
         }
       });
 
-      const { status, mensaje, errores } = response.data;
-
-      if (status === 'ok') {
-        setMessage(`✅ ${mensaje}`);
-        setUploadStatus('success');
-      } else if (status === 'parcial') {
-        setMessage(`⚠️ ${mensaje}`);
-        setUploadStatus('warning');
-      } else {
-        setMessage(`❌ ${mensaje}\n${errores?.join('\n')}`);
-        setUploadStatus('error');
-      }
-
+      setMessage('✅ Archivo subido exitosamente.');
+      setUploadStatus('success');
       setSelectedFile(null);
       onClose();
     } catch (error) {
