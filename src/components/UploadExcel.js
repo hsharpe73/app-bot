@@ -13,7 +13,8 @@ import {
   IconButton,
   Tooltip,
   Fade,
-  Chip
+  Chip,
+  Zoom
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CloseIcon from '@mui/icons-material/Close';
@@ -47,7 +48,7 @@ const UploadExcel = ({ open, onClose }) => {
 
       setMessage(response.data?.mensaje || 'Archivo procesado correctamente.');
       setSelectedFile(null);
-      onClose(); // Cierra el modal al subir exitosamente
+      onClose();
     } catch (error) {
       setMessage('⚠️ Error al subir el archivo.');
     } finally {
@@ -95,7 +96,12 @@ const UploadExcel = ({ open, onClose }) => {
 
         <DialogContent dividers sx={{ py: 3 }}>
           <Stack spacing={3}>
-            <Stack direction="row" alignItems="center" spacing={2}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              spacing={2}
+              sx={{ flexWrap: 'wrap' }}
+            >
               <Button
                 variant="contained"
                 component="label"
@@ -116,18 +122,20 @@ const UploadExcel = ({ open, onClose }) => {
                 />
               </Button>
 
-              {selectedFile ? (
-                <Chip
-                  label={selectedFile.name}
-                  color="primary"
-                  variant="outlined"
-                  sx={{ maxWidth: 200 }}
-                />
-              ) : (
-                <Typography variant="body2" color="text.secondary">
-                  Ningún archivo seleccionado
-                </Typography>
-              )}
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                {selectedFile ? (
+                  <Chip
+                    label={selectedFile.name}
+                    color="primary"
+                    variant="outlined"
+                    sx={{ maxWidth: 200 }}
+                  />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Ningún archivo seleccionado
+                  </Typography>
+                )}
+              </Box>
             </Stack>
 
             <Typography variant="caption" color="text.secondary">
@@ -140,22 +148,29 @@ const UploadExcel = ({ open, onClose }) => {
           <Button onClick={onClose} sx={{ textTransform: 'none' }}>
             Cancelar
           </Button>
-          <Button
-            onClick={handleUpload}
-            variant="contained"
-            color="success"
-            disabled={!selectedFile}
-            sx={{
-              textTransform: 'none',
-              fontWeight: 'bold',
-              borderRadius: 2,
-              boxShadow: !selectedFile ? 'none' : 4,
-              opacity: !selectedFile ? 0.5 : 1,
-              transition: 'all 0.3s ease',
-            }}
-          >
-            Subir
-          </Button>
+
+          {/* Animación scale para el botón "Subir" */}
+          <Zoom in={!!selectedFile}>
+            <span>
+              <Button
+                onClick={handleUpload}
+                variant="contained"
+                color="success"
+                disabled={!selectedFile}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 'bold',
+                  borderRadius: 2,
+                  boxShadow: selectedFile ? 4 : 'none',
+                  opacity: selectedFile ? 1 : 0.5,
+                  transition: 'all 0.3s ease',
+                  pointerEvents: selectedFile ? 'auto' : 'none',
+                }}
+              >
+                Subir
+              </Button>
+            </span>
+          </Zoom>
         </DialogActions>
       </Dialog>
 
