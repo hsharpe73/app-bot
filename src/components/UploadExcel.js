@@ -10,7 +10,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton
+  IconButton,
+  Tooltip,
+  Fade,
+  Chip
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CloseIcon from '@mui/icons-material/Close';
@@ -54,25 +57,55 @@ const UploadExcel = ({ open, onClose }) => {
 
   return (
     <>
-      <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Subir Archivo Excel
-          <IconButton
-            aria-label="cerrar"
-            onClick={onClose}
-            sx={{ position: 'absolute', right: 8, top: 8, color: 'grey.500' }}
-          >
-            <CloseIcon />
-          </IconButton>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="sm"
+        fullWidth
+        TransitionComponent={Fade}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            boxShadow: 10,
+            p: 1,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontWeight: 'bold',
+            fontSize: '1.3rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            pr: 5,
+          }}
+        >
+          📄 Subir Archivo Excel
+          <Tooltip title="Cerrar">
+            <IconButton
+              aria-label="cerrar"
+              onClick={onClose}
+              sx={{ color: 'grey.500' }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Tooltip>
         </DialogTitle>
 
-        <DialogContent dividers>
-          <Stack spacing={2}>
+        <DialogContent dividers sx={{ py: 3 }}>
+          <Stack spacing={3}>
             <Stack direction="row" alignItems="center" spacing={2}>
               <Button
                 variant="contained"
                 component="label"
                 startIcon={<UploadFileIcon />}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  boxShadow: 2,
+                }}
               >
                 Seleccionar Excel
                 <input
@@ -83,16 +116,44 @@ const UploadExcel = ({ open, onClose }) => {
                 />
               </Button>
 
-              <Typography variant="body2">
-                {selectedFile ? selectedFile.name : 'Ningún archivo seleccionado'}
-              </Typography>
+              {selectedFile ? (
+                <Chip
+                  label={selectedFile.name}
+                  color="primary"
+                  variant="outlined"
+                  sx={{ maxWidth: 200 }}
+                />
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  Ningún archivo seleccionado
+                </Typography>
+              )}
             </Stack>
+
+            <Typography variant="caption" color="text.secondary">
+              ✅ Solo se permiten archivos .xlsx o .xls
+            </Typography>
           </Stack>
         </DialogContent>
 
-        <DialogActions>
-          <Button onClick={onClose}>Cancelar</Button>
-          <Button onClick={handleUpload} variant="contained" color="success" disabled={!selectedFile}>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={onClose} sx={{ textTransform: 'none' }}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleUpload}
+            variant="contained"
+            color="success"
+            disabled={!selectedFile}
+            sx={{
+              textTransform: 'none',
+              fontWeight: 'bold',
+              borderRadius: 2,
+              boxShadow: !selectedFile ? 'none' : 4,
+              opacity: !selectedFile ? 0.5 : 1,
+              transition: 'all 0.3s ease',
+            }}
+          >
             Subir
           </Button>
         </DialogActions>
@@ -104,7 +165,11 @@ const UploadExcel = ({ open, onClose }) => {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity="info" variant="filled" onClose={() => setSnackbarOpen(false)}>
+        <Alert
+          severity="info"
+          variant="filled"
+          onClose={() => setSnackbarOpen(false)}
+        >
           {message}
         </Alert>
       </Snackbar>
