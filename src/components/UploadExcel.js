@@ -21,7 +21,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 
-const WEBHOOK_EXCEL_URL = 'https://servicios-n8n-n8n.9barxf.easypanel.host/webhook/consulta-ventas-v3';
+const WEBHOOK_EXCEL_URL = 'https://app-bot.app.n8n.cloud/webhook/subir-excel';
 
 const UploadExcel = ({ open, onClose }) => {
   const [selectedFile, setSelectedFile] = useState(null);

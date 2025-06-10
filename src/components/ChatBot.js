@@ -28,7 +28,7 @@ import botAnimation from '../assets/bot.json';
 import InformeChart from './InformeChart';
 import UploadExcel from './UploadExcel';
 
-const WEBHOOK_URL = 'https://app-bot.app.n8n.cloud/webhook/consulta-ventas-v3';
+const WEBHOOK_URL = 'https://servicios-n8n-n8n.9barxf.easypanel.host/webhook/consulta-ventas-v3';
 
 const formatCLP = (num) => {
   const parsed = parseFloat(num);
