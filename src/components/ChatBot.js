@@ -129,7 +129,7 @@ const ChatBot = () => {
   };
 
   useEffect(() => {
-    const welcome = '¡Hola! Soy tu asistente de ventas. ¿En qué puedo ayudarte hoy?'
+    const welcome = '¡Hola! Soy Optimus, tu asistente de ventas. ¿En qué puedo ayudarte hoy?'
     setMessages([{ sender: 'bot', text: welcome }]);
     speak(welcome);
   }, []);
