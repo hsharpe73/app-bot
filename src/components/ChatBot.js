@@ -121,7 +121,8 @@ const ChatBot = () => {
     return `${numeroATexto(numeric)} pesos`;
   });
 
-  cleaned = cleaned.replace(/Optimus/gi, 'Octimus');
+  
+  cleaned = cleaned.replace(/Optimus/gi, 'Óctimos');
 
   const utterance = new SpeechSynthesisUtterance(cleaned);
   utteranceRef.current = utterance;
@@ -130,6 +131,7 @@ const ChatBot = () => {
   utterance.lang = 'es-CL';
   speechSynthesis.speak(utterance);
 };
+
 
 
   useEffect(() => {
