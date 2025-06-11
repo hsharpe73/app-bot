@@ -245,7 +245,7 @@ const ChatBot = () => {
   };
 
   const handleClear = () => {
-    const welcome = '¡Hola! Soy Optimus, tu asistente de ventas...';
+    const welcome = '¡Hola! Soy Optimus, tu asistente de ventas. ¿En qué puedo ayudarte hoy?';
     speechSynthesis.cancel();
     setTextoPendiente('');
     setMessages([{ sender: 'bot', text: welcome }]);
