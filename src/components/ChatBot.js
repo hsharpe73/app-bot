@@ -120,8 +120,8 @@ const ChatBot = () => {
     const numeric = parseInt(rawNumber.replace(/\./g, ''));
     return `${numeroATexto(numeric)} pesos`;
   });
-
-  cleaned = cleaned.replace('Optimus', 'Óptimus,');
+  
+  cleaned = cleaned.replace('Optimus', 'Optimus,');
 
   const utterance = new SpeechSynthesisUtterance(cleaned);
   utteranceRef.current = utterance;
