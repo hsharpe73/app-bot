@@ -111,22 +111,26 @@ const ChatBot = () => {
   };
 
   const speak = (text) => {
-    if (!vozActiva) {
-      setTextoPendiente(text);
-      return;
-    }
-    let cleaned = text.replace(/<[^>]*>?/gm, '');
-    cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
-      const numeric = parseInt(rawNumber.replace(/\./g, ''));
-      return `${numeroATexto(numeric)} pesos`;
-    });
-    const utterance = new SpeechSynthesisUtterance(cleaned);
-    utteranceRef.current = utterance;
-    const selectedVoice = getSpanishVoice();
-    if (selectedVoice) utterance.voice = selectedVoice;
-    utterance.lang = 'es-CL';
-    speechSynthesis.speak(utterance);
-  };
+  if (!vozActiva) {
+    setTextoPendiente(text);
+    return;
+  }
+  let cleaned = text.replace(/<[^>]*>?/gm, '');
+  cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
+    const numeric = parseInt(rawNumber.replace(/\./g, ''));
+    return `${numeroATexto(numeric)} pesos`;
+  });
+
+  cleaned = cleaned.replace('Optimus', 'Óptimus,');
+
+  const utterance = new SpeechSynthesisUtterance(cleaned);
+  utteranceRef.current = utterance;
+  const selectedVoice = getSpanishVoice();
+  if (selectedVoice) utterance.voice = selectedVoice;
+  utterance.lang = 'es-CL';
+  speechSynthesis.speak(utterance);
+};
+
 
   useEffect(() => {
     const welcome = '¡Hola! Soy Optimus, tu asistente de ventas. ¿En qué puedo ayudarte hoy?'
