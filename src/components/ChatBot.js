@@ -100,42 +100,47 @@ const ChatBot = () => {
     }
   }, [vozActiva]);
 
+  // ✅ Selecciona la voz chilena o la más cercana
   const getSpanishVoice = () => {
     const voices = speechSynthesis.getVoices();
-    return voices.find((voice) =>
-      voice.lang.startsWith('es') &&
-      (voice.name.toLowerCase().includes('google') ||
-        voice.name.toLowerCase().includes('helena') ||
-        voice.name.toLowerCase().includes('microsoft'))
+    return (
+      voices.find(v => v.lang === 'es-CL') || // Chile
+      voices.find(v => v.lang === 'es-PE') || // Perú
+      voices.find(v => v.lang === 'es-MX') || // México
+      voices.find(v => v.lang.startsWith('es')) || // Cualquier español
+      voices.find(v => v.lang.startsWith('es-419')) // Latinoamérica general
+      
     );
   };
 
+  // ✅ Corrige pronunciación de "Odonto-Bot" y usa voz chilena
   const speak = (text) => {
-  if (!vozActiva) {
-    setTextoPendiente(text);
-    return;
-  }
-  let cleaned = text.replace(/<[^>]*>?/gm, '');
-  cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
-    const numeric = parseInt(rawNumber.replace(/\./g, ''));
-    return `${numeroATexto(numeric)} pesos`;
-  });
+    if (!vozActiva) {
+      setTextoPendiente(text);
+      return;
+    }
 
-  
-  cleaned = cleaned.replace(/Optimus/gi, 'Óctimos');
+    let cleaned = text.replace(/<[^>]*>?/gm, '');
+    cleaned = cleaned.replace(/\$([\d.]+)/g, (_, rawNumber) => {
+      const numeric = parseInt(rawNumber.replace(/\./g, ''));
+      return `${numeroATexto(numeric)} pesos`;
+    });
 
-  const utterance = new SpeechSynthesisUtterance(cleaned);
-  utteranceRef.current = utterance;
-  const selectedVoice = getSpanishVoice();
-  if (selectedVoice) utterance.voice = selectedVoice;
-  utterance.lang = 'es-CL';
-  speechSynthesis.speak(utterance);
-};
+    // Reemplazo solo para pronunciación
+    cleaned = cleaned.replace(/Odonto[\s-]?Bot/gi, 'Odonto Bót');
 
-
+    const utterance = new SpeechSynthesisUtterance(cleaned);
+    utteranceRef.current = utterance;
+    const selectedVoice = getSpanishVoice();
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.lang = 'es-CL'; // Fuerza voz chilena
+    utterance.rate = 1; // Velocidad natural
+    utterance.pitch = 1; // Tono natural
+    speechSynthesis.speak(utterance);
+  };
 
   useEffect(() => {
-    const welcome = '¡Hola! Soy Optimus, tu asistente de ventas. ¿En qué puedo ayudarte hoy?'
+    const welcome = '¡Hola! Soy Odonto-Bot, tu asistente. ¿En qué puedo ayudarte hoy?';
     setMessages([{ sender: 'bot', text: welcome }]);
     speak(welcome);
   }, []);
@@ -151,7 +156,7 @@ const ChatBot = () => {
     );
 
     if (saludoDetectado) {
-      const respuestaSaludo = '¡Hola! ¿En qué puedo ayudarte hoy?';
+      const respuestaSaludo = '¡Hola! Soy Odonto-Bot, tu asistente. ¿En qué puedo ayudarte hoy?';
       speechSynthesis.cancel();
       setTextoPendiente('');
       setMessages((prev) => [...prev, { sender: 'bot', text: respuestaSaludo }]);
@@ -190,7 +195,7 @@ const ChatBot = () => {
         respuesta = respuesta.replace(/(\d{1,3}(?:[.,]\d{1,2})?)%/g, '<strong>$1%</strong>');
 
         const mensaje = respuesta.toLowerCase().includes('no hay datos disponibles')
-          ? '⚠️ No se encontró información para esa factura.' : respuesta;
+          ? '⚠️ No se encontró información para esa consulta.' : respuesta;
 
         speechSynthesis.cancel();
         setTextoPendiente('');
@@ -198,7 +203,7 @@ const ChatBot = () => {
         speak(mensaje);
       }
     } catch (err) {
-      const errorMsg = '⚠️ Error al conectar con el asistente';
+      const errorMsg = '⚠️ Error al conectar con Odonto-Bot';
       speechSynthesis.cancel();
       setTextoPendiente('');
       setMessages((prev) => [...prev, { sender: 'bot', text: errorMsg }]);
@@ -229,19 +234,9 @@ const ChatBot = () => {
       return newRow;
     });
     const ws = XLSX.utils.json_to_sheet(formattedData, { cellText: true });
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      const cellAddress = XLSX.utils.encode_cell({ c: C, r: 0 });
-      if (ws[cellAddress]) {
-        ws[cellAddress].s = {
-          font: { bold: true },
-          alignment: { horizontal: 'center', vertical: 'center' },
-        };
-      }
-    }
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Informe');
-    XLSX.writeFile(wb, 'informe-ventas.xlsx');
+    XLSX.writeFile(wb, 'informe-odontobot.xlsx');
   };
 
   const handleClear = () => {
@@ -279,7 +274,7 @@ const ChatBot = () => {
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Stack direction="row" spacing={2} alignItems="center">
             <Box sx={{ width: 50 }}><Lottie animationData={botAnimation} loop={true} /></Box>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#ff5722' }}>Asistente de Ventas</Typography>
+            <Typography variant="h6" fontWeight="bold" sx={{ color: '#ff5722' }}>Odonto-Bot, tu asistente</Typography>
           </Stack>
           <Stack direction="row" spacing={1}>
             <Tooltip title="Subir Excel">
@@ -298,7 +293,7 @@ const ChatBot = () => {
             {messages.map((msg, index) => (
               <Slide direction="up" in mountOnEnter unmountOnExit key={index} timeout={{ enter: 250 }}>
                 <Box sx={{ alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start', backgroundColor: msg.sender === 'user' ? '#ff7043' : '#26c6da', color: '#fff', px: 2, py: 1.5, borderRadius: 2, maxWidth: '85%', boxShadow: 3 }}>
-                  <Typography variant="caption" fontWeight="bold">{msg.sender === 'user' ? 'Tú' : 'Asistente'}</Typography>
+                  <Typography variant="caption" fontWeight="bold">{msg.sender === 'user' ? 'Tú' : 'Odonto-Bot'}</Typography>
                   <Typography variant="body2" component="div" dangerouslySetInnerHTML={{ __html: msg.text }} />
                 </Box>
               </Slide>
