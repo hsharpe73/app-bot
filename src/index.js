@@ -3,4 +3,8 @@ import ReactDOM from 'react-dom/client';
 import ChatBot from './components/ChatBot';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<ChatBot />);
+root.render(
+  <React.StrictMode>
+    <ChatBot />
+  </React.StrictMode>
+);
