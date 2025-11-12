@@ -104,7 +104,6 @@ const ChatBot = () => {
   const getSpanishVoice = () => {
     const voices = speechSynthesis.getVoices();
     return (
-      voices.find(v => v.lang === 'es-CL') || // Chile
       voices.find(v => v.lang === 'es-PE') || // Perú
       voices.find(v => v.lang === 'es-MX') || // México
       voices.find(v => v.lang.startsWith('es')) || // Cualquier español
